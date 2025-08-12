@@ -1,3 +1,4 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -13,58 +14,61 @@ class AIChatView extends GetView<AIChatController> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0D0B1E),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Stack(
-            children: [
-              // Divine Light Background
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topCenter,
-                    radius: 1.5,
-                    colors: [
-                      Color(0xFF2D1B69),
-                      Color(0xFF0D0B1E),
-                      Color(0xFF000000),
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Stack(
+              children: [
+                // Divine Light Background
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment.topCenter,
+                      radius: 1.5,
+                      colors: [
+                        Color(0xFF2D1B69),
+                        Color(0xFF0D0B1E),
+                        Color(0xFF000000),
+                      ],
+                    ),
+                  ),
+                ),
+                // Holy Spirit Particles
+                ParticlesFly(
+                  height: constraints.maxHeight,
+                  width: constraints.maxWidth,
+                  numberOfParticles: 120,
+                  speedOfParticles: 0.3,
+                  connectDots: true,
+                  lineColor: const Color(0xFFFFD700).withOpacity(0.08),
+                  particleColor: const Color(0xFFFFD700).withOpacity(0.25),
+                  onTapAnimation: true,
+                ),
+                // Celestial Particles
+                ParticlesFly(
+                  height: constraints.maxHeight,
+                  width: constraints.maxWidth,
+                  numberOfParticles: 60,
+                  speedOfParticles: 0.15,
+                  connectDots: false,
+                  lineColor: Colors.transparent,
+                  particleColor: const Color(0xFF9333EA).withOpacity(0.2),
+                  onTapAnimation: true,
+                ),
+                SafeArea(
+                  child: Column(
+                    children: [
+                      _buildDivineHeader(context, constraints),
+                      Expanded(child: _buildHolyChatContainer(context, constraints)),
+                      _buildPrayerInputArea(context, constraints),
                     ],
                   ),
                 ),
-              ),
-              // Holy Spirit Particles
-              ParticlesFly(
-                height: constraints.maxHeight,
-                width: constraints.maxWidth,
-                numberOfParticles: 120,
-                speedOfParticles: 0.3,
-                connectDots: true,
-                lineColor: const Color(0xFFFFD700).withOpacity(0.08),
-                particleColor: const Color(0xFFFFD700).withOpacity(0.25),
-                onTapAnimation: true,
-              ),
-              // Celestial Particles
-              ParticlesFly(
-                height: constraints.maxHeight,
-                width: constraints.maxWidth,
-                numberOfParticles: 60,
-                speedOfParticles: 0.15,
-                connectDots: false,
-                lineColor: Colors.transparent,
-                particleColor: const Color(0xFF9333EA).withOpacity(0.2),
-                onTapAnimation: true,
-              ),
-              SafeArea(
-                child: Column(
-                  children: [
-                    _buildDivineHeader(context, constraints),
-                    Expanded(child: _buildHolyChatContainer(context, constraints)),
-                    _buildPrayerInputArea(context, constraints),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -616,6 +620,7 @@ class AIChatView extends GetView<AIChatController> {
     );
   }
 
+
   Widget _buildPrayerMessage(BuildContext context, BoxConstraints constraints) {
     return SlideInUp(
       duration: const Duration(milliseconds: 600),
@@ -676,14 +681,21 @@ class AIChatView extends GetView<AIChatController> {
                           style: TextStyle(fontSize: constraints.maxWidth * 0.04),
                         ),
                         SizedBox(width: constraints.maxWidth * 0.03),
-                        Text(
-                          'Seeking Jesus wisdom...',
-                          style: GoogleFonts.inter(
-                            color: Colors.white.withOpacity(0.9),
-                            fontSize: constraints.maxWidth * 0.038,
-                            fontWeight: FontWeight.w500,
-                            fontStyle: FontStyle.italic,
-                          ),
+                        AnimatedTextKit(
+                          animatedTexts: [
+                            TyperAnimatedText(
+                              'Seeking Jesus wisdom...',
+                              textStyle: GoogleFonts.inter(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: constraints.maxWidth * 0.038,
+                                fontWeight: FontWeight.w500,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              speed: const Duration(milliseconds: 50),
+                            ),
+                          ],
+                          isRepeatingAnimation: true,
+                          repeatForever: true,
                         ),
                       ],
                     ),
@@ -696,7 +708,6 @@ class AIChatView extends GetView<AIChatController> {
       ),
     );
   }
-
   Widget _buildPrayerIndicator(BoxConstraints constraints) {
     return Row(
       mainAxisSize: MainAxisSize.min,
