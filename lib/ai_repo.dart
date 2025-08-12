@@ -17,11 +17,13 @@ class AIRepository {
       'John 3:16': 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
       'Psalm 23:1': 'The Lord is my shepherd; I shall not want.',
       'Matthew 5:16': 'Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven.',
+      'Matthew 6:9-13': 'After this manner therefore pray ye: Our Father which art in heaven, Hallowed be thy name. Thy kingdom come, Thy will be done in earth, as it is in heaven. Give us this day our daily bread. And forgive us our debts, as we forgive our debtors. And lead us not into temptation, but deliver us from evil: For thine is the kingdom, and the power, and the glory, for ever. Amen.',
     },
     'NIV': {
       'John 3:16': 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
       'Psalm 23:1': 'The Lord is my shepherd, I lack nothing.',
       'Matthew 5:16': 'Let your light shine before others, that they may see your good deeds and glorify your Father in heaven.',
+      'Matthew 6:9-13': 'This, then, is how you should pray: Our Father in heaven, hallowed be your name, your kingdom come, your will be done, on earth as it is in heaven. Give us today our daily bread. And forgive us our debts, as we also have forgiven our debtors. And lead us not into temptation, but deliver us from the evil one.',
     },
   };
 
@@ -299,28 +301,45 @@ Ensure the response is distinct from previous answers but thematically related.
         .where((word) => word.isNotEmpty)
         .toList();
 
-    bool containsReligiousKeyword = promptWords.any(
-          (word) => religiousKeywords.any((keyword) => word.contains(keyword)),
+    // Check for religious and non-religious keywords
+    final religiousMatches = promptWords
+        .where((word) => religiousKeywords.any((keyword) => word.contains(keyword)))
+        .toList();
+    final nonReligiousMatches = promptWords
+        .where((word) => nonReligiousKeywords.any((keyword) => word.contains(keyword)))
+        .toList();
+
+    // Log matches for debugging
+    developer.log(
+      'Prompt: $prompt, Religious matches: $religiousMatches, Non-religious matches: $nonReligiousMatches',
+      name: 'JesusAI',
     );
 
-    bool containsNonReligiousKeyword = promptWords.any(
-          (word) => nonReligiousKeywords.any((keyword) => word.contains(keyword)),
-    );
+    // Prioritize religious keywords
+    if (religiousMatches.isNotEmpty) {
+      developer.log('Religious prompt confirmed due to keywords: $religiousMatches', name: 'JesusAI');
+      return true;
+    }
 
-    // If it asks about universal life topics, default to Bible answer
-    final universalQuestions = ['what is', 'meaning of', 'define', 'purpose of'];
-    bool isUniversalLifeQuestion = universalQuestions.any(
+    // Handle universal questions (e.g., "what is", "meaning of")
+    final universalQuestions = ['what is', 'meaning of', 'define', 'purpose of', 'how do', 'how to'];
+    bool isUniversalQuestion = universalQuestions.any(
           (phrase) => prompt.toLowerCase().startsWith(phrase),
     );
 
-    if (isUniversalLifeQuestion) {
-      return true; // Always treat as religious
+    if (isUniversalQuestion) {
+      developer.log('Universal question detected, treating as religious: $prompt', name: 'JesusAI');
+      return true;
     }
 
-    if (!containsReligiousKeyword && !containsNonReligiousKeyword) {
+    // If no religious keywords and no universal question, check non-religious keywords
+    if (nonReligiousMatches.isNotEmpty) {
+      developer.log('Non-religious prompt confirmed due to keywords: $nonReligiousMatches', name: 'JesusAI');
       return false;
     }
 
-    return containsReligiousKeyword && !containsNonReligiousKeyword;
+    // Default to false if no clear religious or non-religious context
+    developer.log('No clear religious or non-religious context, defaulting to non-religious: $prompt', name: 'JesusAI');
+    return false;
   }
 }
