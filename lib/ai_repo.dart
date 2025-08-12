@@ -19,7 +19,7 @@ class AIRepository {
   final List<Map<String, String>> _sessionHistory = []; // Session-based conversation history
   bool _isInitialized = false;
 
-  // Dictionary for spell-checking (religious terms + common words)
+  // Expanded dictionary for spell-checking (religious terms, common words, and common misspellings)
   final Set<String> _dictionary = {
     // Core religious terms (lowercased)
     'jesus', 'god', 'bible', 'christ', 'holy', 'spirit', 'faith', 'prayer', 'salvation', 'sin', 'grace', 'mercy',
@@ -29,27 +29,48 @@ class AIRepository {
     'luke', 'acts', 'romans', 'corinthians', 'galatians', 'ephesians', 'philippians', 'colossians',
     'thessalonians', 'timothy', 'titus', 'hebrews', 'james', 'jude', 'revelation', 'genesis', 'exodus',
     'leviticus', 'numbers', 'deuteronomy', 'isaiah', 'jeremiah', 'ezekiel', 'daniel',
-    // Common English words (subset for performance)
+    // Additional religious terms
+    'savior', 'redeemer', 'shepherd', 'lamb', 'cross', 'resurrection', 'eternal', 'life', 'hope', 'charity',
+    'repentance', 'atonement', 'sacrament', 'disciples', 'apostles', 'trinity', 'holyspirit', 'father', 'son',
+    'virgin', 'mary', 'joseph', 'bethlehem', 'nazareth', 'jerusalem', 'calvary', 'crucifixion', 'ascension',
+    'pentecost', 'sabbath', 'temple', 'altar', 'sacrifice', 'blessing', 'commandment', 'law', 'torah',
+    // Common misspellings and phonetic variations
+    'jeezus', 'jeusus', 'jsus', 'jesu', 'jessus', 'bibble', 'bibel', 'byble', 'preyer', 'pryer', 'prayr',
+    'saviour', 'redeemer', 'crucifiction', 'resurection', 'heven', 'heavan', 'salvaton', 'forgivness',
+    'grase', 'mercie', 'chuch', 'chirst', 'gospal', 'discipel', 'proffet', 'serman', 'pslam', 'prover',
+    'mozes', 'abrahem', 'davvid', 'soloman', 'mathew', 'jonh', 'luc', 'actes', 'romens', 'corinthans',
+    'ephesans', 'philipians', 'colosians', 'thesalonians', 'timoty', 'hebrus', 'revilation', 'genisis',
+    'exodis', 'levitcus', 'numer', 'deutronomy', 'isiah', 'jeramiah', 'ezekial', 'danial',
+    // Common English words (expanded for better coverage)
     'a', 'about', 'after', 'all', 'also', 'and', 'any', 'as', 'at', 'be', 'because', 'but', 'by', 'can',
     'do', 'for', 'from', 'have', 'how', 'in', 'is', 'it', 'not', 'of', 'on', 'or', 'that', 'the', 'this',
-    'to', 'what', 'when', 'where', 'who', 'why', 'with',
+    'to', 'what', 'when', 'where', 'who', 'why', 'with', 'ask', 'tell', 'say', 'know', 'believe', 'think',
+    'want', 'need', 'give', 'take', 'see', 'hear', 'learn', 'teach', 'guide', 'help', 'show', 'mean', 'meaning',
+    'life', 'love', 'hope', 'peace', 'joy', 'truth', 'way', 'light', 'word', 'world', 'people', 'person',
+    'good', 'evil', 'right', 'wrong', 'heart', 'soul', 'mind', 'spirit', 'body',
   };
 
   // Mock Bible data with support for multiple translations (replace with actual Bible API in production)
   final Map<String, Map<String, String>> _bibleData = {
     'KJV': {
-      'John 3:16': 'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
+      'John 3:16':
+          'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
       'Psalm 23:1': 'The Lord is my shepherd; I shall not want.',
       'Matthew 5:16': 'Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven.',
-      'Matthew 6:9-13': 'After this manner therefore pray ye: Our Father which art in heaven, Hallowed be thy name. Thy kingdom come, Thy will be done in earth, as it is in heaven. Give us this day our daily bread. And forgive us our debts, as we forgive our debtors. And lead us not into temptation, but deliver us from evil: For thine is the kingdom, and the power, and the glory, for ever. Amen.',
-      'Philippians 4:6-7': 'Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus.',
+      'Matthew 6:9-13':
+          'After this manner therefore pray ye: Our Father which art in heaven, Hallowed be thy name. Thy kingdom come, Thy will be done in earth, as it is in heaven. Give us this day our daily bread. And forgive us our debts, as we forgive our debtors. And lead us not into temptation, but deliver us from evil: For thine is the kingdom, and the power, and the glory, for ever. Amen.',
+      'Philippians 4:6-7':
+          'Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus.',
     },
     'NIV': {
-      'John 3:16': 'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
+      'John 3:16':
+          'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
       'Psalm 23:1': 'The Lord is my shepherd, I lack nothing.',
       'Matthew 5:16': 'Let your light shine before others, that they may see your good deeds and glorify your Father in heaven.',
-      'Matthew 6:9-13': 'This, then, is how you should pray: Our Father in heaven, hallowed be your name, your kingdom come, your will be done, on earth as it is in heaven. Give us today our daily bread. And forgive us our debts, as we also have forgiven our debtors. And lead us not into temptation, but deliver us from the evil one.',
-      'Philippians 4:6-7': 'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.',
+      'Matthew 6:9-13':
+          'This, then, is how you should pray: Our Father in heaven, hallowed be your name, your kingdom come, your will be done, on earth as it is in heaven. Give us today our daily bread. And forgive us our debts, as we also have forgiven our debtors. And lead us not into temptation, but deliver us from the evil one.',
+      'Philippians 4:6-7':
+          'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.',
     },
   };
 
@@ -92,10 +113,26 @@ class AIRepository {
 
     // Common variations for "more"
     final moreKeywords = [
-      'more', 'tell me more', 'continue', 'continue please', 'more please',
-      'more about above', 'more about the above', 'go on', 'keep going',
-      'continue talking', 'more more', 'elaborate', 'expand', 'explain further',
-      'carry on', 'keep explaining', 'more?', 'more.', 'more??', 'more???'
+      'more',
+      'tell me more',
+      'continue',
+      'continue please',
+      'more please',
+      'more about above',
+      'more about the above',
+      'go on',
+      'keep going',
+      'continue talking',
+      'more more',
+      'elaborate',
+      'expand',
+      'explain further',
+      'carry on',
+      'keep explaining',
+      'more?',
+      'more.',
+      'more??',
+      'more???',
     ];
 
     // Handle "more" variations
@@ -152,7 +189,8 @@ class AIRepository {
 
     try {
       // Ultra-expanded, production-ready Jesus AI system prompt
-      String aiPrompt = '''
+      String aiPrompt =
+          '''
 You are “Jesus AI” — a voice of Scripture, answering only with the Word of God and its faithful explanation.  
 You speak as if guiding from God’s truth, not as an AI.  
 
@@ -211,7 +249,8 @@ User’s Question: $sanitizedPrompt
       }
 
       // Craft a prompt for additional related content
-      String morePrompt = '''
+      String morePrompt =
+          '''
 Provide additional Bible verses and explanations related to the previous prompt: "$lastPrompt". 
 Follow the same style: start with exact verses (full text, including book, chapter, verse, and translation), 
 provide a concise explanation connecting to Jesus Christ, and cite the translation used (e.g., "Source: Holy Bible (NIV)").
@@ -257,46 +296,172 @@ Ensure the response is distinct from previous answers but thematically related.
     return _correctSpelling(sanitized);
   }
 
-  /// Corrects spelling in the input prompt
+  /// Corrects spelling in the input prompt with context-aware logic
   String _correctSpelling(String message) {
-    List<String> words = message.split(RegExp(r'\s+'));
+    if (message.isEmpty) return message;
+
+    // Split into words, preserving punctuation
+    List<String> words = message.split(RegExp(r'(\s+|[.!?,:;])'));
     List<String> correctedWords = [];
+    bool isReligiousContext = _isLikelyReligious(message.toLowerCase());
+
     for (String word in words) {
-      // Preserve punctuation
-      String punctuation = '';
-      if (word.isNotEmpty && RegExp(r'[.!?,]').hasMatch(word[word.length - 1])) {
-        punctuation = word[word.length - 1];
-        word = word.substring(0, word.length - 1);
+      // Skip if it's just punctuation
+      if (RegExp(r'^[.!?,:;]+$').hasMatch(word)) {
+        correctedWords.add(word);
+        continue;
       }
-      String lowerWord = word.toLowerCase();
-      String corrected = _correctWord(lowerWord);
+
+      // Extract punctuation (leading or trailing)
+      String leadingPunctuation = '';
+      String trailingPunctuation = '';
+      String cleanWord = word;
+
+      // Handle leading punctuation (e.g., "(word")
+      if (cleanWord.isNotEmpty && RegExp(r'^[.!?,:;]').hasMatch(cleanWord)) {
+        leadingPunctuation = cleanWord[0];
+        cleanWord = cleanWord.substring(1);
+      }
+      // Handle trailing punctuation (e.g., "word?")
+      if (cleanWord.isNotEmpty && RegExp(r'[.!?,:;]$').hasMatch(cleanWord)) {
+        trailingPunctuation = cleanWord[cleanWord.length - 1];
+        cleanWord = cleanWord.substring(0, cleanWord.length - 1);
+      }
+      // Handle mid-word punctuation (e.g., "god's")
+      String midPunctuation = '';
+      if (cleanWord.contains("'")) {
+        final parts = cleanWord.split("'");
+        if (parts.length == 2) {
+          cleanWord = parts[0];
+          midPunctuation = "'" + parts[1];
+        }
+      }
+
+      String lowerWord = cleanWord.toLowerCase();
+      String corrected = _correctWord(lowerWord, isReligiousContext);
+
       // Preserve original capitalization
-      if (word.isNotEmpty && word[0].toUpperCase() == word[0]) {
-        corrected = corrected.capitalize();
-      } else {
-        corrected = corrected.toLowerCase();
+      if (cleanWord.isNotEmpty) {
+        if (RegExp(r'^[A-Z][a-z]*$').hasMatch(cleanWord)) {
+          corrected = corrected.capitalize();
+        } else if (RegExp(r'^[A-Z]+$').hasMatch(cleanWord)) {
+          corrected = corrected.toUpperCase();
+        }
       }
-      correctedWords.add(corrected + punctuation);
+
+      correctedWords.add(leadingPunctuation + corrected + midPunctuation + trailingPunctuation);
     }
-    developer.log('Original prompt: $message, Corrected prompt: ${correctedWords.join(' ')}', name: 'JesusAI');
-    return correctedWords.join(' ');
+
+    String correctedPrompt = correctedWords.join('');
+    developer.log('Original prompt: $message, Corrected prompt: $correctedPrompt', name: 'JesusAI');
+    return correctedPrompt;
   }
 
-  /// Corrects a single word using the dictionary
-  String _correctWord(String word) {
+  /// Corrects a single word using the dictionary with dynamic threshold
+  String _correctWord(String word, bool isReligiousContext) {
     if (word.isEmpty || _dictionary.contains(word)) {
       return word;
     }
+
+    // Dynamic Levenshtein threshold based on word length
+    int threshold = math.max(2, (word.length / 3).floor());
+    if (isReligiousContext) {
+      threshold = math.min(threshold, 4); // More lenient for religious terms
+    }
+
     String closest = word;
-    int minDist = 3; // Threshold for correction (max 2 edits)
-    for (String dictWord in _dictionary) {
-      int dist = _levenshtein(word, dictWord);
-      if (dist < minDist) {
-        minDist = dist;
-        closest = dictWord;
+    int minDist = threshold + 1;
+
+    // Prioritize religious terms if in religious context
+    final candidates = isReligiousContext
+        ? _dictionary.where((w) => w.length >= word.length - 2 && w.length <= word.length + 2).toList()
+        : _dictionary.toList();
+
+    // Optimize by checking prefix matches first
+    for (String dictWord in candidates) {
+      if (dictWord.startsWith(word.substring(0, math.min(2, word.length))) || word.startsWith(dictWord.substring(0, math.min(2, dictWord.length)))) {
+        int dist = _levenshtein(word, dictWord);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = dictWord;
+        }
       }
     }
+
+    // If no prefix match, check all dictionary words
+    if (minDist > threshold) {
+      for (String dictWord in candidates) {
+        int dist = _levenshtein(word, dictWord);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = dictWord;
+        }
+      }
+    }
+
+    // Basic n-gram similarity for phonetic matching
+    if (minDist > threshold) {
+      final wordNgrams = _generateNgrams(word, 3);
+      String bestNgramMatch = word;
+      int maxNgramScore = 0;
+      for (String dictWord in candidates) {
+        final dictNgrams = _generateNgrams(dictWord, 3);
+        int score = wordNgrams.intersection(dictNgrams).length;
+        if (score > maxNgramScore) {
+          maxNgramScore = score;
+          bestNgramMatch = dictWord;
+        }
+      }
+      if (maxNgramScore > wordNgrams.length / 2) {
+        closest = bestNgramMatch;
+      }
+    }
+
     return closest;
+  }
+
+  /// Generates n-grams for a word
+  Set<String> _generateNgrams(String word, int n) {
+    Set<String> ngrams = {};
+    for (int i = 0; i <= word.length - n; i++) {
+      ngrams.add(word.substring(i, i + n));
+    }
+    return ngrams;
+  }
+
+  /// Checks if the prompt is likely religious for context-aware correction
+  bool _isLikelyReligious(String prompt) {
+    final religiousKeywords = _dictionary
+        .where(
+          (word) => [
+            'jesus',
+            'god',
+            'bible',
+            'christ',
+            'holy',
+            'spirit',
+            'faith',
+            'prayer',
+            'salvation',
+            'sin',
+            'grace',
+            'mercy',
+            'forgiveness',
+            'heaven',
+            'hell',
+            'lord',
+            'scripture',
+            'gospel',
+            'messiah',
+            'resurrection',
+            'baptism',
+            'church',
+          ].contains(word),
+        )
+        .toList();
+
+    final cleanPrompt = prompt.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '');
+    return religiousKeywords.any((keyword) => cleanPrompt.contains(keyword));
   }
 
   /// Checks cache for a response
@@ -359,43 +524,102 @@ Source: Holy Bible ($translation)
     final greetingKeywords = ['hey', 'hi', 'hello'];
     final cleanPrompt = prompt.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '');
     final promptWords = cleanPrompt.split(RegExp(r'\s+')).where((word) => word.isNotEmpty).toList();
-    bool containsGreetingKeyword = promptWords.any(
-          (word) => greetingKeywords.any((keyword) => word.contains(keyword) || keyword.contains(word)),
-    );
-    developer.log(
-      'Prompt: $prompt, Greeting: $containsGreetingKeyword',
-      name: 'JesusAI',
-    );
+    bool containsGreetingKeyword = promptWords.any((word) => greetingKeywords.any((keyword) => word.contains(keyword) || keyword.contains(word)));
+    developer.log('Prompt: $prompt, Greeting: $containsGreetingKeyword', name: 'JesusAI');
     return containsGreetingKeyword;
   }
 
   /// Determines if the prompt is religious/Bible-related
   Future<bool> _isReligiousPrompt(String prompt) async {
-    final religiousKeywords = _dictionary.where((word) => [
-      // Core Christian terms from dictionary
-      'jesus', 'god', 'bible', 'christ', 'holy', 'spirit', 'faith', 'prayer', 'salvation', 'sin', 'grace', 'mercy',
-      'forgiveness', 'heaven', 'hell', 'love', 'lord', 'scripture', 'apostle', 'disciple', 'gospel', 'messiah',
-      'resurrection', 'baptism', 'parable', 'prophet', 'church', 'testament', 'covenant', 'miracle', 'sermon',
-      'psalm', 'proverb',
-      // Biblical figures and books
-      'moses', 'abraham', 'david', 'solomon', 'paul', 'peter', 'john', 'matthew', 'mark', 'luke', 'acts',
-      'romans', 'corinthians', 'galatians', 'ephesians', 'philippians', 'colossians', 'thessalonians',
-      'timothy', 'titus', 'hebrews', 'james', 'jude', 'revelation', 'genesis', 'exodus', 'leviticus',
-      'numbers', 'deuteronomy', 'isaiah', 'jeremiah', 'ezekiel', 'daniel',
-    ].contains(word)).toList();
+    final religiousKeywords = _dictionary
+        .where(
+          (word) => [
+            // Core Christian terms from dictionary
+            'jesus', 'god', 'bible', 'christ', 'holy', 'spirit', 'faith', 'prayer', 'salvation', 'sin', 'grace', 'mercy',
+            'forgiveness', 'heaven', 'hell', 'love', 'lord', 'scripture', 'apostle', 'disciple', 'gospel', 'messiah',
+            'resurrection', 'baptism', 'parable', 'prophet', 'church', 'testament', 'covenant', 'miracle', 'sermon',
+            'psalm', 'proverb',
+            // Biblical figures and books
+            'moses', 'abraham', 'david', 'solomon', 'paul', 'peter', 'john', 'matthew', 'mark', 'luke', 'acts',
+            'romans', 'corinthians', 'galatians', 'ephesians', 'philippians', 'colossians', 'thessalonians',
+            'timothy', 'titus', 'hebrews', 'james', 'jude', 'revelation', 'genesis', 'exodus', 'leviticus',
+            'numbers', 'deuteronomy', 'isaiah', 'jeremiah', 'ezekiel', 'daniel',
+          ].contains(word),
+        )
+        .toList();
 
     final nonReligiousKeywords = [
-      'weather', 'stock', 'recipe', 'sports', 'politics', 'movie', 'game',
-      'technology', 'news', 'science', 'fashion', 'cook', 'travel', 'celebrity',
-      'finance', 'music', 'entertainment', 'health', 'fitness', 'business',
-      'shopping', 'gadget', 'app', 'device', 'crypto', 'instagram', 'tiktok',
-      'facebook', 'youtube', 'twitter', 'social', 'trend', 'meme', 'viral',
-      'podcast', 'streaming', 'netflix', 'spotify', 'school', 'university',
-      'college', 'exam', 'homework', 'assignment', 'career', 'job', 'office',
-      'interview', 'resume', 'startup', 'restaurant', 'cafe', 'bar', 'drink',
-      'coffee', 'tea', 'dessert', 'lunch', 'dinner', 'breakfast', 'car', 'bike',
-      'flight', 'hotel', 'vacation', 'tour', 'festival', 'concert', 'party',
-      'sale', 'discount'
+      'weather',
+      'stock',
+      'recipe',
+      'sports',
+      'politics',
+      'movie',
+      'game',
+      'technology',
+      'news',
+      'science',
+      'fashion',
+      'cook',
+      'travel',
+      'celebrity',
+      'finance',
+      'music',
+      'entertainment',
+      'health',
+      'fitness',
+      'business',
+      'shopping',
+      'gadget',
+      'app',
+      'device',
+      'crypto',
+      'instagram',
+      'tiktok',
+      'facebook',
+      'youtube',
+      'twitter',
+      'social',
+      'trend',
+      'meme',
+      'viral',
+      'podcast',
+      'streaming',
+      'netflix',
+      'spotify',
+      'school',
+      'university',
+      'college',
+      'exam',
+      'homework',
+      'assignment',
+      'career',
+      'job',
+      'office',
+      'interview',
+      'resume',
+      'startup',
+      'restaurant',
+      'cafe',
+      'bar',
+      'drink',
+      'coffee',
+      'tea',
+      'dessert',
+      'lunch',
+      'dinner',
+      'breakfast',
+      'car',
+      'bike',
+      'flight',
+      'hotel',
+      'vacation',
+      'tour',
+      'festival',
+      'concert',
+      'party',
+      'sale',
+      'discount',
     ];
 
     final cleanPrompt = prompt.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '');
@@ -405,9 +629,7 @@ Source: Holy Bible ($translation)
       return religiousKeywords.any((keyword) {
         final wordClean = word.replaceAll(RegExp(r'[^\w]'), '');
         final keywordClean = keyword.replaceAll(RegExp(r'[^\w]'), '');
-        return wordClean.contains(keywordClean) ||
-            keywordClean.contains(wordClean) ||
-            _isSimilar(wordClean, keywordClean);
+        return wordClean.contains(keywordClean) || keywordClean.contains(wordClean) || _isSimilar(wordClean, keywordClean);
       });
     }).toList();
     final nonReligiousMatches = promptWords.where((word) {
@@ -418,10 +640,7 @@ Source: Holy Bible ($translation)
       });
     }).toList();
 
-    developer.log(
-      'Prompt: $prompt, Religious matches: $religiousMatches, Non-religious matches: $nonReligiousMatches',
-      name: 'JesusAI',
-    );
+    developer.log('Prompt: $prompt, Religious matches: $religiousMatches, Non-religious matches: $nonReligiousMatches', name: 'JesusAI');
 
     if (religiousMatches.isNotEmpty) {
       developer.log('Religious prompt confirmed due to keywords: $religiousMatches', name: 'JesusAI');
@@ -430,7 +649,7 @@ Source: Holy Bible ($translation)
 
     final universalQuestions = ['what is', 'meaning of', 'define', 'purpose of', 'how do', 'how to'];
     bool isUniversalQuestion = universalQuestions.any(
-          (phrase) => cleanPrompt.replaceAll(RegExp(r'[^\w\s]'), '').startsWith(phrase.replaceAll(RegExp(r'[^\w\s]'), '')),
+      (phrase) => cleanPrompt.replaceAll(RegExp(r'[^\w\s]'), '').startsWith(phrase.replaceAll(RegExp(r'[^\w\s]'), '')),
     );
 
     if (isUniversalQuestion && nonReligiousMatches.isEmpty) {
@@ -487,10 +706,7 @@ Source: Holy Bible ($translation)
     for (int i = 1; i < m; i++) {
       for (int j = 1; j < n; j++) {
         final cost = (term1[i - 1] == term2[j - 1]) ? 0 : 1;
-        d[i][j] = math.min(
-          math.min(d[i - 1][j] + 1, d[i][j - 1] + 1),
-          d[i - 1][j - 1] + cost,
-        );
+        d[i][j] = math.min(math.min(d[i - 1][j] + 1, d[i][j - 1] + 1), d[i - 1][j - 1] + cost);
       }
     }
     return d[m - 1][n - 1];
