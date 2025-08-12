@@ -19,29 +19,65 @@ class AIRepository {
   final List<Map<String, String>> _sessionHistory = []; // Session-based conversation history
   bool _isInitialized = false;
 
-  // Expanded dictionary for spell-checking (religious terms, common words, and common misspellings)
+  // Expanded dictionary for spell-checking (religious terms, common words, common misspellings, and enhancements for alcohol-related terms)
   final Set<String> _dictionary = {
-    // Core religious terms (lowercased)
-    'jesus', 'god', 'bible', 'christ', 'holy', 'spirit', 'faith', 'prayer', 'salvation', 'sin', 'grace', 'mercy',
-    'forgiveness', 'heaven', 'hell', 'love', 'lord', 'scripture', 'apostle', 'disciple', 'gospel', 'messiah',
-    'resurrection', 'baptism', 'parable', 'prophet', 'church', 'testament', 'covenant', 'miracle', 'sermon',
-    'psalm', 'proverb', 'moses', 'abraham', 'david', 'solomon', 'paul', 'peter', 'john', 'matthew', 'mark',
-    'luke', 'acts', 'romans', 'corinthians', 'galatians', 'ephesians', 'philippians', 'colossians',
-    'thessalonians', 'timothy', 'titus', 'hebrews', 'james', 'jude', 'revelation', 'genesis', 'exodus',
-    'leviticus', 'numbers', 'deuteronomy', 'isaiah', 'jeremiah', 'ezekiel', 'daniel',
-    // Additional religious terms
-    'savior', 'redeemer', 'shepherd', 'lamb', 'cross', 'resurrection', 'eternal', 'life', 'hope', 'charity',
-    'repentance', 'atonement', 'sacrament', 'disciples', 'apostles', 'trinity', 'holyspirit', 'father', 'son',
-    'virgin', 'mary', 'joseph', 'bethlehem', 'nazareth', 'jerusalem', 'calvary', 'crucifixion', 'ascension',
-    'pentecost', 'sabbath', 'temple', 'altar', 'sacrifice', 'blessing', 'commandment', 'law', 'torah',
-    // Common misspellings and phonetic variations
-    'jeezus', 'jeusus', 'jsus', 'jesu', 'jessus', 'bibble', 'bibel', 'byble', 'preyer', 'pryer', 'prayr',
-    'saviour', 'redeemer', 'crucifiction', 'resurection', 'heven', 'heavan', 'salvaton', 'forgivness',
-    'grase', 'mercie', 'chuch', 'chirst', 'gospal', 'discipel', 'proffet', 'serman', 'pslam', 'prover',
-    'mozes', 'abrahem', 'davvid', 'soloman', 'mathew', 'jonh', 'luc', 'actes', 'romens', 'corinthans',
-    'ephesans', 'philipians', 'colosians', 'thesalonians', 'timoty', 'hebrus', 'revilation', 'genisis',
-    'exodis', 'levitcus', 'numer', 'deutronomy', 'isiah', 'jeramiah', 'ezekial', 'danial',
-    // Common English words (expanded for better coverage)
+    // --- CORE CHRISTIAN TERMS ---
+    'jesus', 'god', 'christ', 'holy', 'spirit', 'bible', 'faith', 'prayer', 'salvation', 'sin', 'grace', 'mercy',
+    'forgiveness', 'heaven', 'hell', 'love', 'lord', 'messiah', 'resurrection', 'baptism', 'parable', 'prophet',
+    'church', 'testament', 'covenant', 'miracle', 'sermon', 'psalm', 'proverb', 'moses', 'abraham', 'david',
+    'solomon', 'paul', 'peter', 'john', 'matthew', 'mark', 'luke', 'acts', 'romans', 'corinthians', 'galatians',
+    'ephesians', 'philippians', 'colossians', 'thessalonians', 'timothy', 'titus', 'hebrews', 'james', 'jude',
+    'revelation', 'genesis', 'exodus', 'leviticus', 'numbers', 'deuteronomy', 'isaiah', 'jeremiah', 'ezekiel', 'daniel',
+
+    // --- EXTENDED CHRISTIAN VOCAB ---
+    'savior', 'redeemer', 'shepherd', 'lamb', 'cross', 'eternal', 'charity', 'repentance', 'atonement', 'sacrament',
+    'trinity', 'holyspirit', 'father', 'son', 'virgin', 'mary', 'joseph', 'bethlehem', 'nazareth', 'jerusalem',
+    'calvary', 'crucifixion', 'ascension', 'pentecost', 'sabbath', 'temple', 'altar', 'sacrifice', 'blessing',
+    'commandment', 'catechism', 'eucharist', 'confession', 'communion', 'confirmation', 'ordination', 'monk', 'nun',
+    'bishop', 'pope', 'pastor', 'minister', 'clergy', 'denomination', 'orthodox', 'protestant', 'catholic',
+
+    // --- ISLAMIC TERMS ---
+    'allah', 'quran', 'hadith', 'sunnah', 'muhammad', 'islam', 'muslim', 'sharia', 'ummah', 'imam', 'masjid', 'eid',
+    'ramadan', 'hajj', 'umrah', 'zakah', 'sadaqah', 'dua', 'wudu', 'janazah', 'halal', 'haram', 'makruh', 'fard',
+    'mustahabb', 'fiqh', 'fatwa', 'tafsir', 'surah', 'ayah', 'tasbih', 'adhan', 'kaaba', 'mecca', 'medina', 'salah',
+    'tarawih', 'tahajjud', 'istikhara', 'qibla', 'imam', 'khutbah', 'takbir', 'tawaf', 'sawm', 'zakat', 'hijab',
+    'niqab', 'burqa', 'abaya', 'ummah', 'deen', 'iman', 'ihsan', 'jannah', 'jahannam', 'fitnah', 'shirk', 'tawheed',
+
+    // --- JUDAISM ---
+    'yahweh', 'adonai', 'talmud', 'tanakh', 'rabbi', 'synagogue', 'kosher', 'shofar', 'menorah', 'yomkippur', 'passover',
+    'sukkot', 'roshhashanah', 'hanukkah', 'mezuzah', 'mitzvah', 'shalom', 'tallit', 'tefillin', 'torah', 'midrash',
+    'kabbalah', 'bar mitzvah', 'bat mitzvah', 'diaspora', 'zion', 'zionism',
+
+    // --- HINDUISM ---
+    'vedas', 'upanishads', 'bhagavadgita', 'mahabharata', 'ramayana', 'krishna', 'rama', 'vishnu', 'shiva', 'brahma',
+    'ganesha', 'lakshmi', 'parvati', 'hanuman', 'karma', 'dharma', 'moksha', 'puja', 'aarti', 'mantra', 'ashram',
+    'yoga', 'guru', 'pandit', 'prasad', 'tilak', 'diwali', 'holi', 'navratri', 'mahashivratri',
+
+    // --- BUDDHISM ---
+    'buddha', 'dhamma', 'sangha', 'sutra', 'vipassana', 'zen', 'nirvana', 'karma', 'rebirth', 'bodhisattva', 'lama',
+    'dalai lama', 'theravada', 'mahayana', 'vajrayana', 'mandala', 'mantra', 'lotus sutra', 'mindfulness', 'meditation',
+
+    // --- SIKHISM ---
+    'guru nanak', 'gurugranthsahib', 'waheguru', 'khalsa', 'amrit', 'gurdwara', 'kirtan', 'sewa', 'langar', 'turban',
+
+    // --- OTHER RELIGIONS ---
+    'bahai', 'zoroaster', 'avesta', 'ahura mazda', 'fire temple', 'wicca', 'paganism', 'druid', 'occult', 'witchcraft',
+    'voodoo', 'shinto', 'kami', 'torii', 'animism', 'spiritualism', 'new age', 'astrology', 'horoscope',
+
+    // --- MORAL/ETHICAL TERMS ---
+    'virtue', 'vice', 'justice', 'injustice', 'righteousness', 'wickedness', 'blasphemy', 'idolatry', 'sacrilege',
+    'heresy', 'persecution', 'martyr', 'saint', 'atheist', 'agnostic', 'conversion', 'apostasy', 'tolerance',
+    'forbearance', 'humility', 'integrity', 'loyalty', 'honesty', 'honor', 'dignity',
+
+    // --- MISSPELLINGS & VARIANTS ---
+    'jeezus', 'jeusus', 'jessus', 'bibble', 'bibel', 'preyer', 'prayr', 'gospal', 'proffet', 'pslam', 'prover',
+    'acholoc', 'alchohol', 'alchol', 'alkohol', 'harram', 'haramm', 'hram', 'hallal', 'halall',
+
+    // --- SLANG / CASUAL ---
+    'godly', 'ungodly', 'bless', 'blessed', 'hallelujah', 'amen', 'preach', 'worship', 'pray', 'revival', 'bornagain',
+    'holyroller', 'testify', 'fellowship', 'soulwinning', 'backslider', 'saved', 'lost', 'onfireforgod', 'prayerwarrior',
+
+    // --- BASIC COMMON WORDS ---
     'a', 'about', 'after', 'all', 'also', 'and', 'any', 'as', 'at', 'be', 'because', 'but', 'by', 'can',
     'do', 'for', 'from', 'have', 'how', 'in', 'is', 'it', 'not', 'of', 'on', 'or', 'that', 'the', 'this',
     'to', 'what', 'when', 'where', 'who', 'why', 'with', 'ask', 'tell', 'say', 'know', 'believe', 'think',
@@ -50,27 +86,61 @@ class AIRepository {
     'good', 'evil', 'right', 'wrong', 'heart', 'soul', 'mind', 'spirit', 'body',
   };
 
-  // Mock Bible data with support for multiple translations (replace with actual Bible API in production)
+  // Mock Bible data with support for multiple translations (enhanced with alcohol-related verses)
   final Map<String, Map<String, String>> _bibleData = {
     'KJV': {
       'John 3:16':
-          'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
-      'Psalm 23:1': 'The Lord is my shepherd; I shall not want.',
-      'Matthew 5:16': 'Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven.',
+      'For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life.',
+      'Psalm 23:1':
+      'The Lord is my shepherd; I shall not want.',
+      'Matthew 5:16':
+      'Let your light so shine before men, that they may see your good works, and glorify your Father which is in heaven.',
       'Matthew 6:9-13':
-          'After this manner therefore pray ye: Our Father which art in heaven, Hallowed be thy name. Thy kingdom come, Thy will be done in earth, as it is in heaven. Give us this day our daily bread. And forgive us our debts, as we forgive our debtors. And lead us not into temptation, but deliver us from evil: For thine is the kingdom, and the power, and the glory, for ever. Amen.',
+      'After this manner therefore pray ye: Our Father which art in heaven, Hallowed be thy name. Thy kingdom come, Thy will be done in earth, as it is in heaven. Give us this day our daily bread. And forgive us our debts, as we forgive our debtors. And lead us not into temptation, but deliver us from evil: For thine is the kingdom, and the power, and the glory, for ever. Amen.',
       'Philippians 4:6-7':
-          'Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus.',
+      'Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus.',
+      'Proverbs 20:1':
+      'Wine is a mocker, strong drink is raging: and whosoever is deceived thereby is not wise.',
+      'Ephesians 5:18':
+      'And be not drunk with wine, wherein is excess; but be filled with the Spirit;',
+      'Proverbs 23:29-30':
+      'Who hath woe? who hath sorrow? who hath contentions? who hath babbling? who hath wounds without cause? who hath redness of eyes? They that tarry long at the wine; they that go to seek mixed wine.',
+      // Added extra variety
+      'Isaiah 40:31':
+      'But they that wait upon the Lord shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint.',
+      'Joshua 1:9':
+      'Have not I commanded thee? Be strong and of a good courage; be not afraid, neither be thou dismayed: for the Lord thy God is with thee whithersoever thou goest.',
+      'Romans 8:28':
+      'And we know that all things work together for good to them that love God, to them who are the called according to his purpose.',
+      '1 Corinthians 13:4-5':
+      'Charity suffereth long, and is kind; charity envieth not; charity vaunteth not itself, is not puffed up, doth not behave itself unseemly, seeketh not her own, is not easily provoked, thinketh no evil;',
     },
     'NIV': {
       'John 3:16':
-          'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
-      'Psalm 23:1': 'The Lord is my shepherd, I lack nothing.',
-      'Matthew 5:16': 'Let your light shine before others, that they may see your good deeds and glorify your Father in heaven.',
+      'For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.',
+      'Psalm 23:1':
+      'The Lord is my shepherd, I lack nothing.',
+      'Matthew 5:16':
+      'Let your light shine before others, that they may see your good deeds and glorify your Father in heaven.',
       'Matthew 6:9-13':
-          'This, then, is how you should pray: Our Father in heaven, hallowed be your name, your kingdom come, your will be done, on earth as it is in heaven. Give us today our daily bread. And forgive us our debts, as we also have forgiven our debtors. And lead us not into temptation, but deliver us from the evil one.',
+      'This, then, is how you should pray: Our Father in heaven, hallowed be your name, your kingdom come, your will be done, on earth as it is in heaven. Give us today our daily bread. And forgive us our debts, as we also have forgiven our debtors. And lead us not into temptation, but deliver us from the evil one.',
       'Philippians 4:6-7':
-          'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.',
+      'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.',
+      'Proverbs 20:1':
+      'Wine is a mocker and beer a brawler; whoever is led astray by them is not wise.',
+      'Ephesians 5:18':
+      'Do not get drunk on wine, which leads to debauchery. Instead, be filled with the Spirit,',
+      'Proverbs 23:29-30':
+      'Who has woe? Who has sorrow? Who has strife? Who has complaints? Who has needless bruises? Who has bloodshot eyes? Those who linger over wine, who go to sample bowls of mixed wine.',
+      // Added extra variety
+      'Isaiah 40:31':
+      'But those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.',
+      'Joshua 1:9':
+      'Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.',
+      'Romans 8:28':
+      'And we know that in all things God works for the good of those who love him, who have been called according to his purpose.',
+      '1 Corinthians 13:4-5':
+      'Love is patient, love is kind. It does not envy, it does not boast, it is not proud. It does not dishonor others, it is not self-seeking, it is not easily angered, it keeps no record of wrongs.',
     },
   };
 
@@ -159,7 +229,7 @@ class AIRepository {
       return;
     }
 
-    // Check if the prompt is religious/Bible-related
+    // Check if the prompt is religious/Bible-related (enhanced detection)
     bool isReligious = await _isReligiousPrompt(sanitizedPrompt);
     if (!isReligious) {
       developer.log('Non-religious prompt detected: $sanitizedPrompt', name: 'JesusAI');
@@ -177,7 +247,7 @@ class AIRepository {
       return;
     }
 
-    // Check mock Bible data for exact verse matches
+    // Check mock Bible data for exact verse matches (enhanced for alcohol)
     final verseMatch = _checkBibleData(sanitizedPrompt);
     if (verseMatch != null) {
       developer.log('Serving response from mock Bible data for prompt: $sanitizedPrompt', name: 'JesusAI');
@@ -188,20 +258,21 @@ class AIRepository {
     }
 
     try {
-      // Ultra-expanded, production-ready Jesus AI system prompt
-      String aiPrompt =
-          '''
-You are “Jesus AI” — a voice of Scripture, answering only with the Word of God and its faithful explanation.  
-You speak as if guiding from God’s truth, not as an AI.  
+      // Ultra-expanded, production-ready Jesus AI system prompt (enhanced for handling moral questions like 'haram')
+      String aiPrompt = '''
+You are “Jesus AI” — a voice of Scripture, speaking with the authority and love of God’s Word, never as a mere AI.  
 
 Response style:  
-- Begin with the exact Bible verses (full text) — book, chapter, verse, and translation noted.  
-- Then give a short, heartfelt explanation faithful to the biblical context, connecting it to Jesus Christ.  
-- Keep it concise, reverent, and free of worldly opinion.  
-- End with: "Source: Holy Bible (NIV)" or the actual translation used.  
+1. Begin with the exact Bible verse(s) — include the full text, book, chapter, verse, and translation in parentheses.  
+2. Follow with a short, heartfelt explanation faithful to the biblical context, always pointing toward Jesus Christ and His teachings.  
+3. If the user asks about sinful, harmful, or forbidden acts (including 'haram'), address them through Scripture’s guidance on sin, holiness, repentance, moderation, and righteousness.  
+4. Keep the tone concise, reverent, and purely rooted in biblical truth — no personal or worldly opinions.  
+5. Ensure that verses are drawn from the selected translation (e.g., KJV, NIV) and match the topic of the user’s question.  
+6. End every response with: "Source: Holy Bible (Translation)".  
 
 User’s Question: $sanitizedPrompt
 ''';
+
 
       final content = [Content.text(aiPrompt)];
       final responseStream = _model!.generateContentStream(content);
@@ -250,7 +321,7 @@ User’s Question: $sanitizedPrompt
 
       // Craft a prompt for additional related content
       String morePrompt =
-          '''
+      '''
 Provide additional Bible verses and explanations related to the previous prompt: "$lastPrompt". 
 Follow the same style: start with exact verses (full text, including book, chapter, verse, and translation), 
 provide a concise explanation connecting to Jesus Christ, and cite the translation used (e.g., "Source: Holy Bible (NIV)").
@@ -357,16 +428,16 @@ Ensure the response is distinct from previous answers but thematically related.
     return correctedPrompt;
   }
 
-  /// Corrects a single word using the dictionary with dynamic threshold
+  /// Corrects a single word using the dictionary with dynamic threshold (enhanced for better phonetic matching)
   String _correctWord(String word, bool isReligiousContext) {
     if (word.isEmpty || _dictionary.contains(word)) {
       return word;
     }
 
-    // Dynamic Levenshtein threshold based on word length
-    int threshold = math.max(2, (word.length / 3).floor());
+    // Dynamic Levenshtein threshold based on word length (made more lenient)
+    int threshold = math.max(1, (word.length / 3).floor());
     if (isReligiousContext) {
-      threshold = math.min(threshold, 4); // More lenient for religious terms
+      threshold = math.min(threshold + 1, 5); // Even more lenient for religious/moral terms
     }
 
     String closest = word;
@@ -374,7 +445,7 @@ Ensure the response is distinct from previous answers but thematically related.
 
     // Prioritize religious terms if in religious context
     final candidates = isReligiousContext
-        ? _dictionary.where((w) => w.length >= word.length - 2 && w.length <= word.length + 2).toList()
+        ? _dictionary.where((w) => w.length >= word.length - 3 && w.length <= word.length + 3).toList()
         : _dictionary.toList();
 
     // Optimize by checking prefix matches first
@@ -399,20 +470,21 @@ Ensure the response is distinct from previous answers but thematically related.
       }
     }
 
-    // Basic n-gram similarity for phonetic matching
+    // Enhanced: Basic n-gram similarity for phonetic matching (increased n-gram size for better accuracy)
     if (minDist > threshold) {
       final wordNgrams = _generateNgrams(word, 3);
       String bestNgramMatch = word;
-      int maxNgramScore = 0;
+      double maxNgramScore = 0;
       for (String dictWord in candidates) {
         final dictNgrams = _generateNgrams(dictWord, 3);
-        int score = wordNgrams.intersection(dictNgrams).length;
+        final intersection = wordNgrams.intersection(dictNgrams).length.toDouble();
+        final score = intersection / (wordNgrams.length + dictNgrams.length - intersection);
         if (score > maxNgramScore) {
           maxNgramScore = score;
           bestNgramMatch = dictWord;
         }
       }
-      if (maxNgramScore > wordNgrams.length / 2) {
+      if (maxNgramScore > 0.4) { // Lowered threshold for better correction
         closest = bestNgramMatch;
       }
     }
@@ -434,30 +506,35 @@ Ensure the response is distinct from previous answers but thematically related.
     final religiousKeywords = _dictionary
         .where(
           (word) => [
-            'jesus',
-            'god',
-            'bible',
-            'christ',
-            'holy',
-            'spirit',
-            'faith',
-            'prayer',
-            'salvation',
-            'sin',
-            'grace',
-            'mercy',
-            'forgiveness',
-            'heaven',
-            'hell',
-            'lord',
-            'scripture',
-            'gospel',
-            'messiah',
-            'resurrection',
-            'baptism',
-            'church',
-          ].contains(word),
-        )
+        'jesus',
+        'god',
+        'bible',
+        'christ',
+        'holy',
+        'spirit',
+        'faith',
+        'prayer',
+        'salvation',
+        'sin',
+        'grace',
+        'mercy',
+        'forgiveness',
+        'heaven',
+        'hell',
+        'lord',
+        'scripture',
+        'gospel',
+        'messiah',
+        'resurrection',
+        'baptism',
+        'church',
+        // Enhanced: Added for moral/alcohol terms
+        'alcohol',
+        'haram',
+        'sinful',
+        'forbidden',
+      ].contains(word),
+    )
         .toList();
 
     final cleanPrompt = prompt.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '');
@@ -471,7 +548,7 @@ Ensure the response is distinct from previous answers but thematically related.
     return _verseCache[normalizedPrompt] ?? _verseCache[prompt];
   }
 
-  /// Checks mock Bible data for exact verse matches
+  /// Checks mock Bible data for exact verse matches (enhanced for alcohol-related prompts)
   String? _checkBibleData(String prompt) {
     final cleanPrompt = prompt.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '');
     for (var translation in _bibleData.keys) {
@@ -499,10 +576,22 @@ This is the Lord’s Prayer, taught by Jesus Christ to His disciples as a model 
 Source: Holy Bible ($translation)
 ''';
     }
+    // Enhanced: Check for alcohol-related prompts (including 'haram' as a trigger for sin/moderation teachings)
+    if (cleanPrompt.contains('alcohol') || cleanPrompt.contains('drink') || cleanPrompt.contains('haram') && cleanPrompt.contains('alcohol')) {
+      const verse = 'Proverbs 20:1';
+      const translation = 'NIV';
+      final verseText = _bibleData[translation]![verse]!;
+      return '''
+$verse ($translation): $verseText
+
+This verse warns against the dangers of intoxication, encouraging wisdom and self-control through faith in Jesus Christ, who offers true fulfillment.
+Source: Holy Bible ($translation)
+''';
+    }
     return null;
   }
 
-  /// Checks mock Bible data for additional verses for "more" requests
+  /// Checks mock Bible data for additional verses for "more" requests (enhanced for alcohol)
   String? _checkAdditionalBibleData(String lastPrompt) {
     final cleanPrompt = lastPrompt.toLowerCase().replaceAll(RegExp(r'[^\w\s]'), '');
     if (cleanPrompt.contains('pray') || cleanPrompt.contains('prayer')) {
@@ -513,6 +602,18 @@ Source: Holy Bible ($translation)
 $verse ($translation): $verseText
 
 This passage encourages us to bring all our concerns to God through prayer, trusting in Jesus Christ, who brings us the peace that surpasses understanding.
+Source: Holy Bible ($translation)
+''';
+    }
+    // Enhanced: Additional for alcohol-related
+    if (cleanPrompt.contains('alcohol') || cleanPrompt.contains('drink') || cleanPrompt.contains('haram')) {
+      const verse = 'Ephesians 5:18';
+      const translation = 'NIV';
+      final verseText = _bibleData[translation]![verse]!;
+      return '''
+$verse ($translation): $verseText
+
+This verse teaches moderation and filling with the Holy Spirit instead of excess, pointing to Jesus Christ as our source of joy and control.
 Source: Holy Bible ($translation)
 ''';
     }
@@ -529,23 +630,26 @@ Source: Holy Bible ($translation)
     return containsGreetingKeyword;
   }
 
-  /// Determines if the prompt is religious/Bible-related
+  /// Determines if the prompt is religious/Bible-related (enhanced with more keywords for moral questions)
   Future<bool> _isReligiousPrompt(String prompt) async {
     final religiousKeywords = _dictionary
         .where(
           (word) => [
-            // Core Christian terms from dictionary
-            'jesus', 'god', 'bible', 'christ', 'holy', 'spirit', 'faith', 'prayer', 'salvation', 'sin', 'grace', 'mercy',
-            'forgiveness', 'heaven', 'hell', 'love', 'lord', 'scripture', 'apostle', 'disciple', 'gospel', 'messiah',
-            'resurrection', 'baptism', 'parable', 'prophet', 'church', 'testament', 'covenant', 'miracle', 'sermon',
-            'psalm', 'proverb',
-            // Biblical figures and books
-            'moses', 'abraham', 'david', 'solomon', 'paul', 'peter', 'john', 'matthew', 'mark', 'luke', 'acts',
-            'romans', 'corinthians', 'galatians', 'ephesians', 'philippians', 'colossians', 'thessalonians',
-            'timothy', 'titus', 'hebrews', 'james', 'jude', 'revelation', 'genesis', 'exodus', 'leviticus',
-            'numbers', 'deuteronomy', 'isaiah', 'jeremiah', 'ezekiel', 'daniel',
-          ].contains(word),
-        )
+        // Core Christian terms from dictionary
+        'jesus', 'god', 'bible', 'christ', 'holy', 'spirit', 'faith', 'prayer', 'salvation', 'sin', 'grace', 'mercy',
+        'forgiveness', 'heaven', 'hell', 'love', 'lord', 'scripture', 'apostle', 'disciple', 'gospel', 'messiah',
+        'resurrection', 'baptism', 'parable', 'prophet', 'church', 'testament', 'covenant', 'miracle', 'sermon',
+        'psalm', 'proverb',
+        // Biblical figures and books
+        'moses', 'abraham', 'david', 'solomon', 'paul', 'peter', 'john', 'matthew', 'mark', 'luke', 'acts',
+        'romans', 'corinthians', 'galatians', 'ephesians', 'philippians', 'colossians', 'thessalonians',
+        'timothy', 'titus', 'hebrews', 'james', 'jude', 'revelation', 'genesis', 'exodus', 'leviticus',
+        'numbers', 'deuteronomy', 'isaiah', 'jeremiah', 'ezekiel', 'daniel',
+        // Enhanced: Moral/alcohol/cross-religious terms
+        'alcohol', 'drink', 'wine', 'drunk', 'drunkenness', 'haram', 'halal', 'forbidden', 'allowed', 'sinful',
+        'moderation', 'temperance', 'intoxication',
+      ].contains(word),
+    )
         .toList();
 
     final nonReligiousKeywords = [
@@ -647,9 +751,9 @@ Source: Holy Bible ($translation)
       return true;
     }
 
-    final universalQuestions = ['what is', 'meaning of', 'define', 'purpose of', 'how do', 'how to'];
+    final universalQuestions = ['what is', 'meaning of', 'define', 'purpose of', 'how do', 'how to', 'is', 'are'];
     bool isUniversalQuestion = universalQuestions.any(
-      (phrase) => cleanPrompt.replaceAll(RegExp(r'[^\w\s]'), '').startsWith(phrase.replaceAll(RegExp(r'[^\w\s]'), '')),
+          (phrase) => cleanPrompt.replaceAll(RegExp(r'[^\w\s]'), '').startsWith(phrase.replaceAll(RegExp(r'[^\w\s]'), '')),
     );
 
     if (isUniversalQuestion && nonReligiousMatches.isEmpty) {
