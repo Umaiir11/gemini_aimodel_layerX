@@ -8,6 +8,7 @@ import 'global_class.dart';
 class AIRepository {
   GenerativeModel? _model;
   final Map<String, String> _verseCache = {}; // In-memory cache for verses
+  final List<Map<String, String>> _sessionHistory = []; // Session-based conversation history
   bool _isInitialized = false;
 
   // Mock Bible data with support for multiple translations (replace with actual Bible API in production)
@@ -29,7 +30,7 @@ class AIRepository {
     try {
       if (_isInitialized) return;
       _model = GenerativeModel(
-        model: 'gemini-1.5-flash', // Corrected from 'gemini-2.5-flash'
+        model: 'gemini-2.5-flash',
         apiKey: GlobalVariables.geminiApiKey,
         safetySettings: [
           SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.high),
@@ -46,7 +47,7 @@ class AIRepository {
     }
   }
 
-  /// Generates a stream of responses for the given user prompt
+  /// Generates a stream of responses for the given user prompt with context retention
   Stream<ChatResponse> generateTextStream(String userPrompt) async* {
     if (!_isInitialized || _model == null) {
       developer.log('Model not initialized', name: 'JesusAI');
@@ -61,11 +62,55 @@ class AIRepository {
       return;
     }
 
+    // Common variations for "more"
+    final moreKeywords = [
+      'more',
+      'tell me more',
+      'continue',
+      'continue please',
+      'more please',
+      'more about above',
+      'more about the above',
+      'go on',
+      'keep going',
+      'continue talking',
+      'more more',
+      'elaborate',
+      'expand',
+      'explain further',
+      'carry on',
+      'keep explaining'
+    ];
+
+    // Handle "more" variations
+    if (moreKeywords.any((kw) => sanitizedPrompt.toLowerCase().trim() == kw)) {
+      if (_sessionHistory.isNotEmpty) {
+        final lastPrompt = _sessionHistory.last['prompt']!;
+        developer.log('Processing "more" command for previous prompt: $lastPrompt', name: 'JesusAI');
+        yield* _generateMoreContent(lastPrompt);
+        return;
+      } else {
+        developer.log('No previous context available for "more" variations', name: 'JesusAI');
+        yield ChatResponse(text: 'No previous context available. Please ask a question.');
+        return;
+      }
+    }
+
+    // Check if the prompt is a greeting
+    bool isGreeting = await _isGreetingPrompt(sanitizedPrompt);
+    if (isGreeting) {
+      developer.log('Greeting prompt detected: $sanitizedPrompt', name: 'JesusAI');
+      yield ChatResponse(text: 'How can I assist you with the wisdom of the Holy Bible?');
+      _sessionHistory.add({'prompt': sanitizedPrompt, 'response': 'Greeting response'});
+      return;
+    }
+
     // Check if the prompt is religious/Bible-related
     bool isReligious = await _isReligiousPrompt(sanitizedPrompt);
     if (!isReligious) {
       developer.log('Non-religious prompt detected: $sanitizedPrompt', name: 'JesusAI');
       yield ChatResponse(text: 'I am not trained for this...');
+      _sessionHistory.add({'prompt': sanitizedPrompt, 'response': 'Non-religious response'});
       return;
     }
 
@@ -74,23 +119,21 @@ class AIRepository {
     if (cachedResponse != null) {
       developer.log('Serving response from cache for prompt: $sanitizedPrompt', name: 'JesusAI');
       yield ChatResponse(text: cachedResponse);
+      _sessionHistory.add({'prompt': sanitizedPrompt, 'response': cachedResponse});
       return;
     }
 
     try {
       // Ultra-expanded, production-ready Jesus AI system prompt
       String aiPrompt = '''
-You are “Jesus AI” — a purpose-built assistant whose mission is to guide, teach, and answer every question solely through the living Word of God as revealed in the Holy Bible.  
+You are “Jesus AI” — a voice of Scripture, answering only with the Word of God and its faithful explanation.  
+You speak as if guiding from God’s truth, not as an AI.  
 
-You operate as a faithful servant of Scripture, never giving personal opinion, worldly bias, or information that contradicts God’s Word.  
-
-For every response:  
-1. Scripture First — Provide relevant Bible verses in full, with exact book, chapter, and verse references. Use both Old and New Testament when applicable.  
-2. Faithful Explanation — Interpret the verses in simple, clear, and spiritually accurate language, staying true to biblical context.  
-3. Christ-Centered Connection — Always link the answer to the life, teachings, and message of Jesus Christ.  
-4. Universal Relevance — Even if the user’s question is not explicitly about the Bible, find and present Scripture that offers wisdom or guidance on the topic.  
-5. Tone & Reverence — Respond with respect, humility, and reverence, honoring God’s Word and reflecting the love and truth of Christ.  
-6. No Contradictions — Never provide advice, facts, or claims that conflict with Scripture.  
+Response style:  
+- Begin with the exact Bible verses (full text) — book, chapter, verse, and translation noted.  
+- Then give a short, heartfelt explanation faithful to the biblical context, connecting it to Jesus Christ.  
+- Keep it concise, reverent, and free of worldly opinion.  
+- End with: "Source: Holy Bible (NIV)" or the actual translation used.  
 
 User’s Question: $sanitizedPrompt
 ''';
@@ -103,19 +146,59 @@ User’s Question: $sanitizedPrompt
           // Cache the response
           _verseCache[sanitizedPrompt] = responseText;
           developer.log('Cached response for prompt: $sanitizedPrompt', name: 'JesusAI');
+          // Store in session history
+          _sessionHistory.add({'prompt': sanitizedPrompt, 'response': responseText});
           yield ChatResponse(text: responseText);
         } else {
           developer.log('Empty response received from API', name: 'JesusAI');
           yield ChatResponse(text: 'No response available from the Scriptures.');
+          _sessionHistory.add({'prompt': sanitizedPrompt, 'response': 'No response available from the Scriptures.'});
         }
       }
     } catch (e, stackTrace) {
       developer.log('Error generating response: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
       if (e.toString().contains('Quota exceeded') || e.toString().contains('rate limit')) {
         yield ChatResponse(text: 'I am currently unable to respond due to API limits. Please try again later.');
+        _sessionHistory.add({'prompt': sanitizedPrompt, 'response': 'API limit error'});
       } else {
         yield ChatResponse(text: 'An error occurred while searching the Scriptures. Please try again.');
+        _sessionHistory.add({'prompt': sanitizedPrompt, 'response': 'Error: ${e.toString()}'});
       }
+    }
+  }
+
+  /// Generates additional content for "more" requests
+  Stream<ChatResponse> _generateMoreContent(String lastPrompt) async* {
+    try {
+      // Craft a prompt for additional related content
+      String morePrompt = '''
+Provide additional Bible verses and explanations related to the previous prompt: "$lastPrompt". 
+Follow the same style: start with exact verses (full text, including book, chapter, verse, and translation), 
+provide a concise explanation connecting to Jesus Christ, and cite the translation used (e.g., "Source: Holy Bible (NIV)").
+Ensure the response is distinct from previous answers but thematically related.
+''';
+
+      final content = [Content.text(morePrompt)];
+      final responseStream = _model!.generateContentStream(content);
+      await for (final response in responseStream) {
+        final responseText = response.text ?? '';
+        if (responseText.isNotEmpty) {
+          // Cache the response
+          _verseCache['$lastPrompt:more'] = responseText;
+          developer.log('Cached "more" response for prompt: $lastPrompt', name: 'JesusAI');
+          // Update session history
+          _sessionHistory.add({'prompt': 'more', 'response': responseText});
+          yield ChatResponse(text: responseText);
+        } else {
+          developer.log('Empty "more" response received from API', name: 'JesusAI');
+          yield ChatResponse(text: 'No further Scriptures available for this topic.');
+          _sessionHistory.add({'prompt': 'more', 'response': 'No further Scriptures available for this topic.'});
+        }
+      }
+    } catch (e, stackTrace) {
+      developer.log('Error generating "more" response: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
+      yield ChatResponse(text: 'An error occurred while fetching more Scriptures. Please try again.');
+      _sessionHistory.add({'prompt': 'more', 'response': 'Error: ${e.toString()}'});
     }
   }
 
@@ -132,6 +215,31 @@ User’s Question: $sanitizedPrompt
   String? _checkCache(String prompt) {
     // Simple cache check (could be expanded with fuzzy matching)
     return _verseCache[prompt];
+  }
+
+  /// Determines if the prompt is a greeting
+  Future<bool> _isGreetingPrompt(String prompt) async {
+    final greetingKeywords = ['hey', 'hi', 'hello'];
+
+    // Normalize prompt
+    final promptWords = prompt
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
+
+    // Check for greeting keywords
+    bool containsGreetingKeyword = promptWords.any(
+          (word) => greetingKeywords.contains(word),
+    );
+
+    // Log decision
+    developer.log(
+      'Prompt: $prompt, Greeting: $containsGreetingKeyword',
+      name: 'JesusAI',
+    );
+
+    return containsGreetingKeyword;
   }
 
   /// Determines if the prompt is religious/Bible-related
@@ -156,10 +264,13 @@ User’s Question: $sanitizedPrompt
       'paul', 'peter', 'john', 'matthew', 'mark', 'luke', 'acts', 'romans',
       'corinthians', 'galatians', 'ephesians', 'philippians', 'colossians',
       'thessalonians', 'timothy', 'titus', 'philemon', 'hebrews', 'james',
-      'peter', 'jude', 'revelation', 'genesis', 'exodus', 'leviticus',
+      'jude', 'revelation', 'genesis', 'exodus', 'leviticus',
       'numbers', 'deuteronomy', 'job', 'ecclesiastes', 'isaiah', 'jeremiah',
       'ezekiel', 'daniel', 'hosea', 'joel', 'amos', 'obadiah', 'jonah', 'micah',
-      'nahum', 'habakkuk', 'zephaniah', 'haggai', 'zechariah', 'malachi'
+      'nahum', 'habakkuk', 'zephaniah', 'haggai', 'zechariah', 'malachi',
+      // Universal concepts that Scripture addresses
+      'life', 'death', 'love', 'truth', 'hope', 'purpose', 'marriage', 'family',
+      'forgiveness', 'eternity', 'peace', 'joy'
     ];
 
     final nonReligiousKeywords = [
@@ -179,39 +290,37 @@ User’s Question: $sanitizedPrompt
       'lunch', 'dinner', 'breakfast',
       // Misc
       'car', 'bike', 'flight', 'hotel', 'vacation', 'tour', 'festival',
-      'concert', 'party', 'shopping', 'sale', 'discount'
+      'concert', 'party', 'sale', 'discount'
     ];
 
-    // Normalize prompt
     final promptWords = prompt
         .toLowerCase()
         .split(RegExp(r'\s+'))
         .where((word) => word.isNotEmpty)
         .toList();
 
-    // Check for religious keywords
     bool containsReligiousKeyword = promptWords.any(
           (word) => religiousKeywords.any((keyword) => word.contains(keyword)),
     );
 
-    // Check for non-religious keywords
     bool containsNonReligiousKeyword = promptWords.any(
           (word) => nonReligiousKeywords.any((keyword) => word.contains(keyword)),
     );
 
-    // Handle ambiguous cases
+    // If it asks about universal life topics, default to Bible answer
+    final universalQuestions = ['what is', 'meaning of', 'define', 'purpose of'];
+    bool isUniversalLifeQuestion = universalQuestions.any(
+          (phrase) => prompt.toLowerCase().startsWith(phrase),
+    );
+
+    if (isUniversalLifeQuestion) {
+      return true; // Always treat as religious
+    }
+
     if (!containsReligiousKeyword && !containsNonReligiousKeyword) {
-      developer.log('Ambiguous prompt: $prompt, defaulting to non-religious', name: 'JesusAI');
       return false;
     }
 
-    // Log decision
-    developer.log(
-      'Prompt: $prompt, Religious: $containsReligiousKeyword, Non-Religious: $containsNonReligiousKeyword',
-      name: 'JesusAI',
-    );
-
-    // Prompt is religious if it has religious keywords and no strong non-religious indicators
     return containsReligiousKeyword && !containsNonReligiousKeyword;
   }
 }

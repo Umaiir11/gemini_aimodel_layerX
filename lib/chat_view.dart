@@ -185,7 +185,6 @@ class AIChatView extends GetView<AIChatController> {
       '✝️ What does John 3:16 mean?',
       '✝️ How to pray according to the Bible?',
       '✝️ What is salvation in Christianity?',
-      '✝️ Key teachings of Jesus Christ',
     ];
 
     return Wrap(
@@ -245,6 +244,56 @@ class AIChatView extends GetView<AIChatController> {
 
   Widget _buildMessageBubble(
       BuildContext context, BoxConstraints constraints, String content, bool isUser, int index) {
+    // Parse content for Bible verses (assuming format like "John 3:16: ...")
+    final verseRegex = RegExp(r'([A-Za-z]+\s*\d+:\d+\s*[-–]?\s*\d*):?\s*(.*?)(?=\n|$)', multiLine: true);
+    final matches = verseRegex.allMatches(content).toList();
+    final parts = <TextSpan>[];
+
+    if (!isUser && matches.isNotEmpty) {
+      // For AI responses with verses, format verse references in bold
+      int lastEnd = 0;
+      for (final match in matches) {
+        final verseRef = match.group(1);
+        final verseText = match.group(2);
+        final start = match.start;
+        final end = match.end;
+
+        // Add text before the verse
+        if (lastEnd < start) {
+          parts.add(TextSpan(text: content.substring(lastEnd, start)));
+        }
+
+        // Add verse reference in bold and verse text
+        parts.add(TextSpan(
+          text: '$verseRef: ',
+          style: GoogleFonts.inter(
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF60A5FA),
+            fontSize: constraints.maxWidth * 0.035,
+            height: 1.5,
+          ),
+        ));
+        parts.add(TextSpan(
+          text: verseText,
+          style: GoogleFonts.inter(
+            color: const Color(0xFFFFFFFF),
+            fontSize: constraints.maxWidth * 0.035,
+            fontWeight: FontWeight.w400,
+            height: 1.5,
+          ),
+        ));
+
+        lastEnd = end;
+      }
+      // Add remaining text after the last verse
+      if (lastEnd < content.length) {
+        parts.add(TextSpan(text: content.substring(lastEnd)));
+      }
+    } else {
+      // For user messages or non-verse AI responses, use plain text
+      parts.add(TextSpan(text: content));
+    }
+
     return FadeInUp(
       duration: Duration(milliseconds: 250 + (index * 70)),
       child: GestureDetector(
@@ -297,13 +346,15 @@ class AIChatView extends GetView<AIChatController> {
                           width: 1.0,
                         ),
                       ),
-                      child: SelectableText(
-                        content,
-                        style: GoogleFonts.inter(
-                          color: const Color(0xFFFFFFFF),
-                          fontSize: constraints.maxWidth * 0.035,
-                          fontWeight: FontWeight.w400,
-                          height: 1.5,
+                      child: SelectableText.rich(
+                        TextSpan(
+                          children: parts,
+                          style: GoogleFonts.inter(
+                            color: const Color(0xFFFFFFFF),
+                            fontSize: constraints.maxWidth * 0.035,
+                            fontWeight: FontWeight.w400,
+                            height: 1.5,
+                          ),
                         ),
                         textAlign: TextAlign.left,
                       ),
@@ -381,7 +432,7 @@ class AIChatView extends GetView<AIChatController> {
                         width: 1.0,
                       ),
                     ),
-                    child: Obx(() => Text(
+                    child: Text(
                       'Searching the Scriptures...',
                       style: GoogleFonts.inter(
                         color: const Color(0xFFFFFFFF).withOpacity(0.9),
@@ -389,7 +440,7 @@ class AIChatView extends GetView<AIChatController> {
                         fontWeight: FontWeight.w400,
                         height: 1.5,
                       ),
-                    )),
+                    ),
                   ),
                 ],
               ),
