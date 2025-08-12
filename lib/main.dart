@@ -8,16 +8,16 @@ import 'global_class.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   GlobalBindings().dependencies();
-  runApp(const AIStudioAgentApp());
+  runApp(const JesusAIApp());
 }
 
-class AIStudioAgentApp extends StatelessWidget {
-  const AIStudioAgentApp({super.key});
+class JesusAIApp extends StatelessWidget {
+  const JesusAIApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'AI Studio Agent',
+      title: 'Jesus AI',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,

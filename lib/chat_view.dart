@@ -26,7 +26,6 @@ class AIChatView extends GetView<AIChatController> {
                 connectDots: true,
                 lineColor: const Color(0xFF60A5FA).withOpacity(0.05),
                 particleColor: const Color(0xFF60A5FA).withOpacity(0.2),
-
                 onTapAnimation: true,
               ),
               // Particle Layer 2: Sparse, medium speed
@@ -38,7 +37,6 @@ class AIChatView extends GetView<AIChatController> {
                 connectDots: false,
                 lineColor: Colors.transparent,
                 particleColor: const Color(0xFF1E3A8A).withOpacity(0.15),
-
                 onTapAnimation: true,
               ),
               // Particle Layer 3: Minimal, slow-moving
@@ -50,7 +48,6 @@ class AIChatView extends GetView<AIChatController> {
                 connectDots: false,
                 lineColor: Colors.transparent,
                 particleColor: const Color(0xFF60A5FA).withOpacity(0.1),
-
                 onTapAnimation: true,
               ),
               SafeArea(
@@ -81,11 +78,11 @@ class AIChatView extends GetView<AIChatController> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Nexus AI',
+              'Jesus AI',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: constraints.maxWidth * 0.05,
-                fontWeight: FontWeight.w700,
                 color: const Color(0xFFFFFFFF),
+                fontWeight: FontWeight.w700,
                 letterSpacing: -0.5,
               ),
             ),
@@ -156,7 +153,7 @@ class AIChatView extends GetView<AIChatController> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Nexus AI',
+              'Jesus AI',
               style: GoogleFonts.spaceGrotesk(
                 fontSize: constraints.maxWidth * 0.07,
                 fontWeight: FontWeight.w800,
@@ -166,7 +163,7 @@ class AIChatView extends GetView<AIChatController> {
             ),
             SizedBox(height: constraints.maxHeight * 0.02),
             Text(
-              'Ask anything to spark creativity!',
+              'Seek wisdom from the Holy Bible!',
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: constraints.maxWidth * 0.04,
@@ -185,22 +182,23 @@ class AIChatView extends GetView<AIChatController> {
 
   Widget _buildSuggestionChips(BuildContext context, BoxConstraints constraints) {
     final suggestions = [
-      '✨ Quantum computing basics',
-      '🎨 Write a story',
-      '🚀 Tech trends 2025',
-      '💡 Solve my problem',
+      '✝️ What does John 3:16 mean?',
+      '✝️ How to pray according to the Bible?',
+      '✝️ What is salvation in Christianity?',
+      '✝️ Key teachings of Jesus Christ',
     ];
 
     return Wrap(
       spacing: constraints.maxWidth * 0.03,
       runSpacing: constraints.maxHeight * 0.015,
       alignment: WrapAlignment.center,
-      children: suggestions.map((suggestion) => ZoomIn(
+      children: suggestions
+          .map((suggestion) => ZoomIn(
         duration: const Duration(milliseconds: 500),
         child: GestureDetector(
           onTap: () {
-            controller.textController.text = suggestion.substring(2);
-            _sendMessage(suggestion.substring(2));
+            controller.textController.text = suggestion;
+            _sendMessage(suggestion);
           },
           child: Container(
             padding: EdgeInsets.symmetric(
@@ -225,7 +223,8 @@ class AIChatView extends GetView<AIChatController> {
             ),
           ),
         ),
-      )).toList(),
+      ))
+          .toList(),
     );
   }
 
@@ -277,7 +276,7 @@ class AIChatView extends GetView<AIChatController> {
                       Padding(
                         padding: EdgeInsets.only(bottom: constraints.maxHeight * 0.01),
                         child: Text(
-                          'Nexus AI',
+                          'Jesus AI',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: constraints.maxWidth * 0.03,
                             fontWeight: FontWeight.w700,
@@ -306,6 +305,7 @@ class AIChatView extends GetView<AIChatController> {
                           fontWeight: FontWeight.w400,
                           height: 1.5,
                         ),
+                        textAlign: TextAlign.left,
                       ),
                     ),
                   ],
@@ -358,7 +358,7 @@ class AIChatView extends GetView<AIChatController> {
                     child: Row(
                       children: [
                         Text(
-                          'Nexus AI',
+                          'Jesus AI',
                           style: GoogleFonts.spaceGrotesk(
                             fontSize: constraints.maxWidth * 0.03,
                             fontWeight: FontWeight.w700,
@@ -373,10 +373,16 @@ class AIChatView extends GetView<AIChatController> {
                   Container(
                     constraints: BoxConstraints(maxWidth: constraints.maxWidth * 0.75),
                     padding: EdgeInsets.all(constraints.maxWidth * 0.04),
-                    child: Obx(() => SelectableText(
-                      controller.streamedText.value.isEmpty
-                          ? 'Crafting response...'
-                          : controller.streamedText.value,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0A0A0A).withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFF60A5FA).withOpacity(0.2),
+                        width: 1.0,
+                      ),
+                    ),
+                    child: Obx(() => Text(
+                      'Searching the Scriptures...',
                       style: GoogleFonts.inter(
                         color: const Color(0xFFFFFFFF).withOpacity(0.9),
                         fontSize: constraints.maxWidth * 0.035,
@@ -490,7 +496,7 @@ class AIChatView extends GetView<AIChatController> {
                   height: 1.5,
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Ask away...',
+                  hintText: 'Ask about the Bible...',
                   hintStyle: GoogleFonts.inter(
                     color: const Color(0xFFFFFFFF).withOpacity(0.5),
                     fontSize: constraints.maxWidth * 0.035,

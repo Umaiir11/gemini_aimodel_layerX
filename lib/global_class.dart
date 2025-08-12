@@ -6,8 +6,8 @@ import 'ai_repo.dart';
 import 'api_client.dart';
 
 class GlobalVariables {
-  static const String geminiApiKey = 'AIzaSyCN_Uu067S2AYNY3h7R9HA15Y79ajQvwVg'; // Store securely in .env or equivalent
-  static const String baseApiUrl = 'https://generativelanguage.googleapis.com'; // Official Gemini API base URL
+  static const String geminiApiKey = 'AIzaSyCN_Uu067S2AYNY3h7R9HA15Y79ajQvwVg'; // Store securely in .env
+  static const String baseApiUrl = 'https://generativelanguage.googleapis.com'; // Gemini API base URL
 }
 
 class GlobalBindings extends Bindings {
@@ -29,7 +29,7 @@ class GlobalBindings extends Bindings {
     // Initialize ApiClient for network operations
     Get.put<ApiClient>(ApiClient(Get.find<Dio>()), permanent: true);
 
-    // Initialize AIRepository for Gemini API interactions
+    // Initialize AIRepository for Bible-based interactions
     Get.put<AIRepository>(AIRepository(), permanent: true);
   }
 }
