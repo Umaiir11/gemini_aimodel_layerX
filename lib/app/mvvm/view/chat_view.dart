@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -10,7 +8,8 @@ import 'package:particles_fly/particles_fly.dart';
 
 import '../../widget.dart';
 import '../view_model/chat_controller.dart';
-
+// Add this import at the top of the file
+import 'dart:math' as math;
 class AIChatView extends StatefulWidget {
   const AIChatView({super.key});
 
@@ -224,150 +223,143 @@ class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
   Widget _buildRecordingRobot(BuildContext context, BoxConstraints constraints) {
     return SlideInUp(
       duration: const Duration(milliseconds: 400),
-      child: GestureDetector(
-        onTap: () {
-          // Allow stopping recording by tapping
-          HapticFeedback.lightImpact();
-          _aiController.stopRecording();
-        },
-        child: Column(
-          children: [
-            // Animated robot face
-            AnimatedBuilder(
-              animation: _robotController,
-              builder: (context, child) {
-                return Transform.scale(
-                  scale: 1.0 + (_robotController.value * 0.1),
-                  child: Container(
-                    width: constraints.maxWidth * 0.4,
-                    height: constraints.maxWidth * 0.4,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.cyan.withOpacity(0.8),
-                          Colors.blue.withOpacity(0.9),
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.cyan.withOpacity(0.4),
-                          blurRadius: 40,
-                          spreadRadius: 10,
-                        ),
+      child: Column(
+        children: [
+          // Animated robot face
+          AnimatedBuilder(
+            animation: _robotController,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: 1.0 + (_robotController.value * 0.1),
+                child: Container(
+                  width: constraints.maxWidth * 0.4,
+                  height: constraints.maxWidth * 0.4,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.cyan.withOpacity(0.8),
+                        Colors.blue.withOpacity(0.9),
                       ],
                     ),
-                    child: Stack(
-                      children: [
-                        // Robot face
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Eyes
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.white.withOpacity(0.5),
-                                          blurRadius: 5,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.white.withOpacity(0.5),
-                                          blurRadius: 5,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: constraints.maxHeight * 0.02),
-                              // Mouth - animated speaking
-                              AnimatedBuilder(
-                                animation: _waveController,
-                                builder: (context, child) {
-                                  return Container(
-                                    width: 30,
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(4),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.white.withOpacity(0.5),
-                                          blurRadius: 5,
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                        // Antenna
-                        Positioned(
-                          top: 10,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: Container(
-                              width: 3,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                              child: Align(
-                                alignment: Alignment.topCenter,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.cyan.withOpacity(0.4),
+                        blurRadius: 40,
+                        spreadRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      // Robot face
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Eyes
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                Container(
+                                  width: 12,
+                                  height: 12,
                                   decoration: BoxDecoration(
-                                    color: Colors.yellow,
+                                    color: Colors.white,
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.yellow.withOpacity(0.8),
-                                        blurRadius: 8,
+                                        color: Colors.white.withOpacity(0.5),
+                                        blurRadius: 5,
                                       ),
                                     ],
                                   ),
+                                ),
+                                Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.white.withOpacity(0.5),
+                                        blurRadius: 5,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: constraints.maxHeight * 0.02),
+                            // Mouth - animated speaking
+                            AnimatedBuilder(
+                              animation: _waveController,
+                              builder: (context, child) {
+                                return Container(
+                                  width: 30,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(4),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.white.withOpacity(0.5),
+                                        blurRadius: 5,
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Antenna
+                      Positioned(
+                        top: 10,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: Container(
+                            width: 3,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                            child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: Colors.yellow,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.yellow.withOpacity(0.8),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
-            SizedBox(height: constraints.maxHeight * 0.03),
-            // Sound wave visualization
-            _buildSoundWaves(context, constraints),
-          ],
-        ),
+                ),
+              );
+            },
+          ),
+          SizedBox(height: constraints.maxHeight * 0.03),
+          // Sound wave visualization
+          _buildSoundWaves(context, constraints),
+        ],
       ),
     );
   }
@@ -405,45 +397,37 @@ class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
   Widget _buildSpeakingVisualizer(BuildContext context, BoxConstraints constraints) {
     return SlideInUp(
       duration: const Duration(milliseconds: 400),
-      child: GestureDetector(
-        onTap: () {
-          // Allow stopping speech and starting new recording
-          HapticFeedback.lightImpact();
-          _aiController.stopSpeaking();
-          _aiController.startRecording();
-        },
-        child: Container(
-          width: constraints.maxWidth * 0.35,
-          height: constraints.maxWidth * 0.35,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: LinearGradient(
-              colors: [
-                Colors.green.withOpacity(0.8),
-                Colors.teal.withOpacity(0.9),
-              ],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.withOpacity(0.4),
-                blurRadius: 30,
-                spreadRadius: 10,
-              ),
+      child: Container(
+        width: constraints.maxWidth * 0.35,
+        height: constraints.maxWidth * 0.35,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [
+              Colors.green.withOpacity(0.8),
+              Colors.teal.withOpacity(0.9),
             ],
           ),
-          child: AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              return Transform.scale(
-                scale: 1.0 + (_pulseController.value * 0.15),
-                child: Icon(
-                  Icons.volume_up_rounded,
-                  size: constraints.maxWidth * 0.12,
-                  color: Colors.white,
-                ),
-              );
-            },
-          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withOpacity(0.4),
+              blurRadius: 30,
+              spreadRadius: 10,
+            ),
+          ],
+        ),
+        child: AnimatedBuilder(
+          animation: _pulseController,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: 1.0 + (_pulseController.value * 0.15),
+              child: Icon(
+                Icons.volume_up_rounded,
+                size: constraints.maxWidth * 0.12,
+                color: Colors.white,
+              ),
+            );
+          },
         ),
       ),
     );
@@ -501,94 +485,6 @@ class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
         : const SizedBox.shrink());
   }
 
-  Widget _buildLoadingIndicator(BuildContext context, BoxConstraints constraints) {
-    return SlideInUp(
-      duration: const Duration(milliseconds: 400),
-      child: Container(
-        width: constraints.maxWidth * 0.35,
-        height: constraints.maxWidth * 0.35,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            colors: [
-              Colors.orange.withOpacity(0.8),
-              Colors.purple.withOpacity(0.9),
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.orange.withOpacity(0.4),
-              blurRadius: 30,
-              spreadRadius: 10,
-            ),
-          ],
-        ),
-        child: AnimatedBuilder(
-          animation: _waveController,
-          builder: (context, child) {
-            return Transform.rotate(
-              angle: _waveController.value * 2 * math.pi,
-              child: Icon(
-                Icons.psychology_rounded,
-                size: constraints.maxWidth * 0.12,
-                color: Colors.white,
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCancelButton(BuildContext context, BoxConstraints constraints) {
-    return FadeInUp(
-      delay: const Duration(milliseconds: 300),
-      duration: const Duration(milliseconds: 400),
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.mediumImpact();
-          if (_aiController.isSpeaking.value) {
-            _aiController.stopSpeaking();
-          }
-          if (_aiController.isStreaming.value || _aiController.isLoading.value) {
-            _aiController.cancelRequest();
-          }
-        },
-        child: Container(
-          margin: EdgeInsets.only(top: constraints.maxHeight * 0.03),
-          padding: EdgeInsets.symmetric(
-            horizontal: constraints.maxWidth * 0.08,
-            vertical: constraints.maxHeight * 0.015,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.red.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(25),
-            border: Border.all(color: Colors.red.withOpacity(0.4)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.cancel_outlined,
-                color: Colors.red,
-                size: constraints.maxWidth * 0.05,
-              ),
-              SizedBox(width: constraints.maxWidth * 0.02),
-              Text(
-                'Cancel',
-                style: GoogleFonts.inter(
-                  color: Colors.red,
-                  fontSize: constraints.maxWidth * 0.04,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildErrorDisplay(BuildContext context, BoxConstraints constraints) {
     return Obx(
           () => _aiController.errorMessage.value.isNotEmpty
@@ -631,4 +527,3 @@ class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
   }
 }
 
-// Add this import at the top of the file

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:developer' as developer;
 import 'package:get/get.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../mvvm/model/resp_model/chat_rsp_model.dart';
@@ -11,7 +10,6 @@ class AIRepository {
   GenerativeModel? _model;
   bool _isInitialized = false;
   final AIPromptService promptService = Get.find<AIPromptService>();
-  StreamController<ChatResponse>? _streamController; // Added for stream cancellation
 
   /// Initializes the GenerativeModel with error handling
   Future<void> initializeModel() async {
@@ -49,15 +47,10 @@ class AIRepository {
       );
     }
 
-    // Initialize StreamController for cancellation
-    _streamController?.close(); // Close any existing controller
-    _streamController = StreamController<ChatResponse>();
-
     // Sanitize and correct spelling in user input using AIPromptManager
     final sanitizedPrompt = promptService.sanitizeInput(userPrompt);
     if (sanitizedPrompt.isEmpty) {
       yield ChatResponse(text: 'Please provide a valid question.');
-      _streamController?.close();
       return;
     }
 
@@ -69,7 +62,6 @@ class AIRepository {
         return;
       } else {
         yield ChatResponse(text: 'No previous context available. Please ask a question.');
-        _streamController?.close();
         return;
       }
     }
@@ -78,7 +70,6 @@ class AIRepository {
     if (await promptService.isGreetingPrompt(sanitizedPrompt)) {
       yield ChatResponse(text: 'How can I assist you with the wisdom of the Holy Bible?');
       promptService.addToSessionHistory(sanitizedPrompt, 'Greeting response');
-      _streamController?.close();
       return;
     }
 
@@ -86,7 +77,6 @@ class AIRepository {
     if (!await promptService.isReligiousPrompt(sanitizedPrompt)) {
       yield ChatResponse(text: 'I am not trained for this...');
       promptService.addToSessionHistory(sanitizedPrompt, 'Non-religious response');
-      _streamController?.close();
       return;
     }
 
@@ -95,7 +85,6 @@ class AIRepository {
     if (cachedResponse != null) {
       yield ChatResponse(text: cachedResponse);
       promptService.addToSessionHistory(sanitizedPrompt, cachedResponse);
-      _streamController?.close();
       return;
     }
 
@@ -105,7 +94,6 @@ class AIRepository {
       yield ChatResponse(text: verseMatch);
       promptService.cacheResponse(sanitizedPrompt, verseMatch);
       promptService.addToSessionHistory(sanitizedPrompt, verseMatch);
-      _streamController?.close();
       return;
     }
 
@@ -129,11 +117,10 @@ User’s Question: $sanitizedPrompt
       final responseStream = _model!.generateContentStream(content);
       StringBuffer buffer = StringBuffer();
       await for (final response in responseStream) {
-        if (_streamController!.isClosed) break; // Stop if canceled
         final responseText = response.text ?? '';
         if (responseText.isNotEmpty) {
           buffer.write(responseText);
-          _streamController!.add(ChatResponse(text: buffer.toString()));
+          yield ChatResponse(text: buffer.toString());
         }
       }
       final finalResponse = buffer.toString();
@@ -141,41 +128,33 @@ User’s Question: $sanitizedPrompt
         promptService.cacheResponse(sanitizedPrompt, finalResponse);
         promptService.addToSessionHistory(sanitizedPrompt, finalResponse);
       } else {
-        _streamController!.add(ChatResponse(text: 'No response available from the Scriptures.'));
+        yield ChatResponse(text: 'No response available from the Scriptures.');
         promptService.addToSessionHistory(sanitizedPrompt, 'No response available from the Scriptures.');
       }
     } catch (e, stackTrace) {
-      if (_streamController!.isClosed) return;
       if (e.toString().contains('Quota exceeded') || e.toString().contains('rate limit')) {
-        _streamController!.add(ChatResponse(text: 'I am currently unable to respond due to API limits. Please try again later.'));
+        yield ChatResponse(text: 'I am currently unable to respond due to API limits. Please try again later.');
         promptService.addToSessionHistory(sanitizedPrompt, 'API limit error');
       } else {
-        _streamController!.addError(GenericException(
+        throw GenericException(
           message: 'Error generating response: $e',
           code: 'RESPONSE_GENERATION_ERROR',
           metadata: {'error': e.toString()},
           loggerName: 'JesusAI',
-        ));
+        );
       }
-    } finally {
-      await _streamController?.close();
-      _streamController = null;
     }
   }
 
   /// Generates additional content for "more" requests
   Stream<ChatResponse> _generateMoreContent(String lastPrompt) async* {
-    _streamController?.close();
-    _streamController = StreamController<ChatResponse>();
-
     try {
       // Check mock Bible data for additional verses
       final additionalVerse = promptService.checkAdditionalBibleData(lastPrompt);
       if (additionalVerse != null) {
-        _streamController!.add(ChatResponse(text: additionalVerse));
+        yield ChatResponse(text: additionalVerse);
         promptService.cacheResponse('$lastPrompt:more', additionalVerse);
         promptService.addToSessionHistory('more', additionalVerse);
-        await _streamController!.close();
         return;
       }
 
@@ -191,11 +170,10 @@ Ensure the response is distinct from previous answers but thematically related.
       final responseStream = _model!.generateContentStream(content);
       StringBuffer buffer = StringBuffer();
       await for (final response in responseStream) {
-        if (_streamController!.isClosed) break;
         final responseText = response.text ?? '';
         if (responseText.isNotEmpty) {
           buffer.write(responseText);
-          _streamController!.add(ChatResponse(text: buffer.toString()));
+          yield ChatResponse(text: buffer.toString());
         }
       }
       final finalResponse = buffer.toString();
@@ -203,36 +181,14 @@ Ensure the response is distinct from previous answers but thematically related.
         promptService.cacheResponse('$lastPrompt:more', finalResponse);
         promptService.addToSessionHistory('more', finalResponse);
       } else {
-        _streamController!.add(ChatResponse(text: 'No further Scriptures available for this topic.'));
+        yield ChatResponse(text: 'No further Scriptures available for this topic.');
         promptService.addToSessionHistory('more', 'No further Scriptures available for this topic.');
       }
     } catch (e, stackTrace) {
-      if (_streamController!.isClosed) return;
-      _streamController!.addError(GenericException(
+      throw GenericException(
         message: 'Error generating "more" response: $e',
         code: 'MORE_GENERATION_ERROR',
         metadata: {'last_prompt': lastPrompt},
-        loggerName: 'JesusAI',
-      ));
-    } finally {
-      await _streamController?.close();
-      _streamController = null;
-    }
-  }
-
-  /// Cancels the active stream
-  Future<void> cancelStream() async {
-    try {
-      if (_streamController != null && !_streamController!.isClosed) {
-        await _streamController!.close();
-        _streamController = null;
-        developer.log('Stream canceled', name: 'JesusAI');
-      }
-    } catch (e, stackTrace) {
-      throw GenericException(
-        message: 'Error canceling stream: $e',
-        code: 'STREAM_CANCEL_ERROR',
-        metadata: {'error': e.toString()},
         loggerName: 'JesusAI',
       );
     }

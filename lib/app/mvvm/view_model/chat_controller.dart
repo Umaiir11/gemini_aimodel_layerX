@@ -11,17 +11,16 @@ import '../model/body_model/chat_message.dart';
 
 class AIChatController extends GetxController {
   final AIRepository _aiRepository = Get.find<AIRepository>();
-  final RxList<ChatMessage> messages = <ChatMessage>[].obs; // Kept for internal tracking, not displayed
+  final RxList<ChatMessage> messages = <ChatMessage>[].obs;
   final RxString streamedText = ''.obs;
   final RxBool isStreaming = false.obs;
-  final RxBool isLoading = false.obs; // Added for loading state
   final RxString errorMessage = ''.obs;
   final TextEditingController textController = TextEditingController();
   final ScrollController scrollController = ScrollController();
   final stt.SpeechToText _speech = stt.SpeechToText();
   final FlutterTts _tts = FlutterTts();
   final RxBool isListening = false.obs;
-  final RxBool isRecording = false.obs;
+  final RxBool isRecording = false.obs; // Added for recording state
   final RxBool isSpeaking = false.obs;
   final RxInt speakingMessageIndex = (-1).obs;
   final RxBool isTtsAvailable = true.obs;
@@ -65,21 +64,21 @@ class AIChatController extends GetxController {
         onStatus: (status) {
           isListening.value = status == 'listening';
           if (status != 'listening') {
-            isRecording.value = false;
+            isRecording.value = false; // Ensure recording state is reset when speech stops
           }
           developer.log('Speech status: $status', name: 'JesusAI');
         },
         onError: (error) {
           isListening.value = false;
           isRecording.value = false;
-          errorMessage.value = 'Speech recognition error: ${error.errorMsg}.';
+          errorMessage.value = 'Speech recognition error: ${error.errorMsg}. Please try again or use text input.';
           developer.log('Speech error: ${error.errorMsg}, Permanent: ${error.permanent}', name: 'JesusAI');
         },
       );
       developer.log('Speech initialization result: $available', name: 'JesusAI');
       if (!available) {
         errorMessage.value = 'Speech recognition not available. Please check device settings or install Google Speech Services.';
-        developer.log('Speech recognition not available.', name: 'JesusAI');
+        developer.log('Speech recognition not available. Possible causes: no speech engine, no internet, or device incompatibility.', name: 'JesusAI');
       }
     } catch (e, stackTrace) {
       isListening.value = false;
@@ -91,15 +90,17 @@ class AIChatController extends GetxController {
 
   Future<void> _initializeTts() async {
     try {
+      // Check available TTS engines
       List<dynamic> engines = await _tts.getEngines;
       developer.log('Available TTS engines: $engines', name: 'JesusAI');
       if (engines.isEmpty) {
         isTtsAvailable.value = false;
-        errorMessage.value = 'No TTS engine available. Please install Google Text-to-Speech.';
+        errorMessage.value = 'No TTS engine available. Please install Google Text-to-Speech from your app store.';
         developer.log('No TTS engines found', name: 'JesusAI');
         return;
       }
 
+      // Try primary language (en-US)
       bool languageAvailable = await _trySetLanguage('en-US');
       if (!languageAvailable && _ttsRetryCount < _maxTtsRetries) {
         _ttsRetryCount++;
@@ -109,7 +110,7 @@ class AIChatController extends GetxController {
 
       if (!languageAvailable) {
         isTtsAvailable.value = false;
-        errorMessage.value = 'TTS language not supported. Please ensure English is available in TTS settings.';
+        errorMessage.value = 'TTS language not supported. Please ensure English is available in your device’s TTS settings.';
         developer.log('TTS language not supported', name: 'JesusAI');
         return;
       }
@@ -124,7 +125,7 @@ class AIChatController extends GetxController {
       _tts.setErrorHandler((msg) {
         isSpeaking.value = false;
         speakingMessageIndex.value = -1;
-        errorMessage.value = 'TTS error: $msg.';
+        errorMessage.value = 'TTS error: $msg. Please check your device’s TTS settings.';
         isTtsAvailable.value = false;
         developer.log('TTS error: $msg', name: 'JesusAI');
       });
@@ -132,7 +133,7 @@ class AIChatController extends GetxController {
       isTtsAvailable.value = true;
     } catch (e, stackTrace) {
       isTtsAvailable.value = false;
-      errorMessage.value = 'Failed to initialize text-to-speech: $e.';
+      errorMessage.value = 'Failed to initialize text-to-speech: $e. Please install a TTS engine or check settings.';
       developer.log('Error initializing TTS: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
     }
   }
@@ -153,9 +154,110 @@ class AIChatController extends GetxController {
     }
   }
 
+  Future<void> sendMessage(String userMessage) async {
+    if (userMessage.trim().isEmpty) {
+      errorMessage.value = 'Please enter or say a valid question.';
+      developer.log('Empty message received', name: 'JesusAI');
+      return;
+    }
+
+    try {
+      messages.add(ChatMessage(content: userMessage, isUser: true));
+      _scrollToBottom();
+      isStreaming.value = true;
+      streamedText.value = '';
+      errorMessage.value = '';
+
+      StringBuffer responseBuffer = StringBuffer();
+      await for (final response in _aiRepository.generateTextStream(userMessage)) {
+        if (response.text.isNotEmpty) {
+          responseBuffer.write(response.text);
+          streamedText.value = responseBuffer.toString();
+          _scrollToBottom();
+        }
+      }
+
+      final fullResponse = responseBuffer.toString();
+      if (fullResponse.isNotEmpty) {
+        messages.add(ChatMessage(content: fullResponse, isUser: false));
+        developer.log('Full response added to messages: $fullResponse', name: 'JesusAI');
+        if (isTtsAvailable.value) {
+          await speakResponse(fullResponse, messages.length - 1);
+        } else {
+          errorMessage.value = 'TTS unavailable. Please use text to read the response.';
+          developer.log('TTS unavailable, skipping speakResponse', name: 'JesusAI');
+        }
+      } else {
+        errorMessage.value = 'No response available from the Scriptures.';
+        developer.log('Empty response received after buffering', name: 'JesusAI');
+      }
+    } catch (e, stackTrace) {
+      errorMessage.value = 'Error processing message: ${e.toString()}';
+      developer.log('Error sending message: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
+    } finally {
+      isStreaming.value = false;
+      streamedText.value = '';
+      textController.clear();
+      _scrollToBottom();
+    }
+  }
+
+  Future<void> startListening() async {
+    if (isListening.value || isStreaming.value || isRecording.value) return;
+    if (isSpeaking.value) await stopSpeaking(); // Stop TTS before STT
+    try {
+      var status = await Permission.microphone.status;
+      if (!status.isGranted) {
+        status = await Permission.microphone.request();
+        if (!status.isGranted) {
+          errorMessage.value = 'Microphone permission denied. Please enable it in device settings.';
+          developer.log('Microphone permission denied', name: 'JesusAI');
+          return;
+        }
+      }
+
+      bool available = await _speech.initialize();
+      if (available) {
+        isListening.value = true;
+        textController.clear();
+        _speech.listen(
+          onResult: (result) {
+            textController.text = result.recognizedWords;
+            if (result.finalResult) {
+              isListening.value = false;
+              if (result.recognizedWords.isNotEmpty) {
+                sendMessage(result.recognizedWords);
+              }
+            }
+          },
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 5),
+          partialResults: true,
+          cancelOnError: true,
+          listenMode: stt.ListenMode.confirmation,
+        );
+        developer.log('Started listening', name: 'JesusAI');
+      } else {
+        errorMessage.value = 'Speech recognition not available. Please check device settings or install Google Speech Services.';
+        developer.log('Speech recognition not available', name: 'JesusAI');
+      }
+    } catch (e, stackTrace) {
+      isListening.value = false;
+      errorMessage.value = 'Error starting speech recognition: $e';
+      developer.log('Error starting speech: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> stopListening() async {
+    if (!isListening.value) return;
+    await _speech.stop();
+    isListening.value = false;
+    developer.log('Stopped listening', name: 'JesusAI');
+  }
+
   Future<void> startRecording() async {
-    if (isRecording.value || isListening.value || isStreaming.value || isLoading.value) return;
-    if (isSpeaking.value) await stopSpeaking();
+    if (isRecording.value || isListening.value || isStreaming.value) return;
+    if (isSpeaking.value) await stopSpeaking(); // Stop TTS before recording
     try {
       var status = await Permission.microphone.status;
       if (!status.isGranted) {
@@ -180,22 +282,18 @@ class AIChatController extends GetxController {
               isRecording.value = false;
               if (result.recognizedWords.isNotEmpty) {
                 sendMessage(result.recognizedWords);
-              } else {
-                errorMessage.value = 'No speech detected. Please try again.';
-                developer.log('No speech detected', name: 'JesusAI');
               }
             }
           },
-          listenFor: const Duration(seconds: 60),
+          listenFor: const Duration(seconds: 60), // Allow longer recording time
           pauseFor: const Duration(seconds: 5),
           partialResults: true,
           cancelOnError: true,
-          listenMode: stt.ListenMode.dictation,
+          listenMode: stt.ListenMode.dictation, // Use dictation mode for continuous recording
         );
         developer.log('Started recording', name: 'JesusAI');
       } else {
         isRecording.value = false;
-        isListening.value = false;
         errorMessage.value = 'Speech recognition not available. Please check device settings or install Google Speech Services.';
         developer.log('Speech recognition not available', name: 'JesusAI');
       }
@@ -213,59 +311,12 @@ class AIChatController extends GetxController {
     isRecording.value = false;
     isListening.value = false;
     developer.log('Stopped recording', name: 'JesusAI');
-  }
-
-  Future<void> sendMessage(String userMessage) async {
-    if (userMessage.trim().isEmpty) {
-      errorMessage.value = 'Please say a valid question.';
-      developer.log('Empty message received', name: 'JesusAI');
-      return;
-    }
-
-    try {
-      // Store message internally, not displayed in UI
-      messages.add(ChatMessage(content: userMessage, isUser: true));
-      isLoading.value = true; // Show loading indicator
-      errorMessage.value = '';
-
-      StringBuffer responseBuffer = StringBuffer();
-      await for (final response in _aiRepository.generateTextStream(userMessage)) {
-        isLoading.value = false; // Stop loading once streaming starts
-        isStreaming.value = true;
-        if (response.text.isNotEmpty) {
-          responseBuffer.write(response.text);
-          streamedText.value = responseBuffer.toString();
-        }
-      }
-
-      final fullResponse = responseBuffer.toString();
-      if (fullResponse.isNotEmpty) {
-        messages.add(ChatMessage(content: fullResponse, isUser: false));
-        developer.log('Full response: $fullResponse', name: 'JesusAI');
-        if (isTtsAvailable.value) {
-          await speakResponse(fullResponse, messages.length - 1);
-        } else {
-          errorMessage.value = 'TTS unavailable. Please check device TTS settings.';
-          developer.log('TTS unavailable, skipping speakResponse', name: 'JesusAI');
-        }
-      } else {
-        errorMessage.value = 'No response available. Please try again.';
-        developer.log('Empty response received', name: 'JesusAI');
-      }
-    } catch (e, stackTrace) {
-      errorMessage.value = 'Error processing request: ${e.toString()}';
-      developer.log('Error sending message: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
-    } finally {
-      isStreaming.value = false;
-      isLoading.value = false;
-      streamedText.value = '';
-      textController.clear();
-    }
+    // If text was recognized, it will be sent via onResult in startRecording
   }
 
   Future<void> speakResponse(String text, int messageIndex) async {
     if (!isTtsAvailable.value) {
-      errorMessage.value = 'TTS unavailable. Please check device TTS settings.';
+      errorMessage.value = 'TTS unavailable. Please check device TTS settings or install Google Text-to-Speech.';
       developer.log('TTS unavailable, skipping speakResponse', name: 'JesusAI');
       return;
     }
@@ -275,6 +326,7 @@ class AIChatController extends GetxController {
     try {
       isSpeaking.value = true;
       speakingMessageIndex.value = messageIndex;
+      // Retry speaking up to 2 times
       int retryCount = 0;
       bool success = false;
       while (retryCount < _maxTtsRetries && !success) {
@@ -287,7 +339,7 @@ class AIChatController extends GetxController {
           developer.log('TTS speak attempt $retryCount failed: $e', name: 'JesusAI');
           if (retryCount < _maxTtsRetries) {
             await Future.delayed(const Duration(milliseconds: 500));
-            await _initializeTts();
+            await _initializeTts(); // Reinitialize TTS
           } else {
             throw e;
           }
@@ -297,7 +349,7 @@ class AIChatController extends GetxController {
       isSpeaking.value = false;
       speakingMessageIndex.value = -1;
       isTtsAvailable.value = false;
-      errorMessage.value = 'Error speaking response: $e.';
+      errorMessage.value = 'Error speaking response: $e. Please check TTS settings or try again.';
       developer.log('Error speaking: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
     }
   }
@@ -315,31 +367,7 @@ class AIChatController extends GetxController {
     }
   }
 
-  Future<void> cancelRequest() async {
-    try {
-      if (isSpeaking.value) {
-        await stopSpeaking();
-      }
-      if (isStreaming.value || isLoading.value) {
-        // Assuming AIRepository supports canceling streams
-        await _aiRepository.cancelStream();
-        isStreaming.value = false;
-        isLoading.value = false;
-        streamedText.value = '';
-        errorMessage.value = '';
-        developer.log('Request canceled', name: 'JesusAI');
-      }
-      if (isRecording.value || isListening.value) {
-        await stopRecording();
-      }
-    } catch (e, stackTrace) {
-      errorMessage.value = 'Error canceling request: $e';
-      developer.log('Error canceling request: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
-    }
-  }
-
   void _scrollToBottom() {
-    // Kept for potential future use, not needed for voice-only UI
     if (scrollController.hasClients) {
       _scrollDebounceTimer?.cancel();
       _scrollDebounceTimer = Timer(const Duration(milliseconds: 200), () {
