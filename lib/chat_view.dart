@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:particles_fly/particles_fly.dart';
 import 'chat_controller.dart';
+import 'chat_message.dart';
 
 class AIChatView extends GetView<AIChatController> {
   const AIChatView({super.key});
@@ -20,7 +21,6 @@ class AIChatView extends GetView<AIChatController> {
           builder: (context, constraints) {
             return Stack(
               children: [
-                // Divine Light Background
                 Container(
                   decoration: const BoxDecoration(
                     gradient: RadialGradient(
@@ -34,7 +34,6 @@ class AIChatView extends GetView<AIChatController> {
                     ),
                   ),
                 ),
-                // Holy Spirit Particles
                 ParticlesFly(
                   height: constraints.maxHeight,
                   width: constraints.maxWidth,
@@ -45,7 +44,6 @@ class AIChatView extends GetView<AIChatController> {
                   particleColor: const Color(0xFFFFD700).withOpacity(0.25),
                   onTapAnimation: true,
                 ),
-                // Celestial Particles
                 ParticlesFly(
                   height: constraints.maxHeight,
                   width: constraints.maxWidth,
@@ -156,7 +154,8 @@ class AIChatView extends GetView<AIChatController> {
                     BoxShadow(
                       color: (controller.isStreaming.value
                           ? const Color(0xFF9333EA)
-                          : const Color(0xFF10B981)).withOpacity(0.4),
+                          : const Color(0xFF10B981))
+                          .withOpacity(0.4),
                       blurRadius: 10,
                       spreadRadius: 1,
                     ),
@@ -389,7 +388,7 @@ class AIChatView extends GetView<AIChatController> {
   }
 
   Widget _buildDivineMessages(BuildContext context, BoxConstraints constraints) {
-    return ListView.builder(
+    return Obx(() => ListView.builder(
       controller: controller.scrollController,
       padding: EdgeInsets.all(constraints.maxWidth * 0.05),
       itemCount: controller.messages.length + (controller.isStreaming.value ? 1 : 0),
@@ -400,12 +399,11 @@ class AIChatView extends GetView<AIChatController> {
         final message = controller.messages[index];
         return _buildBlessedBubble(context, constraints, message.content, message.isUser, index);
       },
-    );
+    ));
   }
 
   Widget _buildBlessedBubble(
       BuildContext context, BoxConstraints constraints, String content, bool isUser, int index) {
-
     return SlideInUp(
       duration: Duration(milliseconds: 400 + (index * 100)),
       child: GestureDetector(
@@ -470,6 +468,41 @@ class AIChatView extends GetView<AIChatController> {
                                 ),
                               ),
                             ),
+                            if (!isUser)
+                              SizedBox(width: constraints.maxWidth * 0.02),
+                            if (!isUser)
+                              Obx(() => GestureDetector(
+                                onTap: controller.isTtsAvailable.value
+                                    ? () => controller.speakingMessageIndex.value == index
+                                    ? controller.stopSpeaking()
+                                    : controller.speakResponse(content, index)
+                                    : null,
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    gradient: controller.isTtsAvailable.value
+                                        ? const LinearGradient(
+                                      colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                                    )
+                                        : LinearGradient(
+                                      colors: [
+                                        Colors.grey,
+                                        Colors.grey.shade700,
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    controller.speakingMessageIndex.value == index
+                                        ? Icons.stop_rounded
+                                        : Icons.volume_up_rounded,
+                                    color: controller.isTtsAvailable.value
+                                        ? Colors.white
+                                        : Colors.white.withOpacity(0.5),
+                                    size: constraints.maxWidth * 0.05,
+                                  ),
+                                ),
+                              )),
                           ],
                         ),
                       ),
@@ -498,7 +531,8 @@ class AIChatView extends GetView<AIChatController> {
                           BoxShadow(
                             color: (isUser
                                 ? const Color(0xFF6366F1)
-                                : const Color(0xFFFFD700)).withOpacity(0.2),
+                                : const Color(0xFFFFD700))
+                                .withOpacity(0.2),
                             blurRadius: 15,
                             spreadRadius: 1,
                           ),
@@ -620,7 +654,6 @@ class AIChatView extends GetView<AIChatController> {
     );
   }
 
-
   Widget _buildPrayerMessage(BuildContext context, BoxConstraints constraints) {
     return SlideInUp(
       duration: const Duration(milliseconds: 600),
@@ -708,6 +741,7 @@ class AIChatView extends GetView<AIChatController> {
       ),
     );
   }
+
   Widget _buildPrayerIndicator(BoxConstraints constraints) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -762,7 +796,12 @@ class AIChatView extends GetView<AIChatController> {
             SizedBox(width: constraints.maxWidth * 0.03),
             Expanded(
               child: Text(
-                controller.errorMessage.value,
+                controller.errorMessage.value +
+                    (controller.errorMessage.value.contains('TTS')
+                        ? '\nTry installing Google Text-to-Speech or check TTS settings.'
+                        : controller.errorMessage.value.contains('Speech recognition')
+                        ? '\nTry installing Google Speech Services or check device settings.'
+                        : ''),
                 style: GoogleFonts.inter(
                   color: Colors.white,
                   fontSize: constraints.maxWidth * 0.035,
@@ -832,12 +871,67 @@ class AIChatView extends GetView<AIChatController> {
                 onSubmitted: _sendMessage,
               ),
             ),
+            _buildMicButton(context, constraints),
+            SizedBox(width: constraints.maxWidth * 0.02),
             _buildDivineSendButton(context, constraints),
             SizedBox(width: constraints.maxWidth * 0.02),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildMicButton(BuildContext context, BoxConstraints constraints) {
+    return Obx(() => Pulse(
+      duration: controller.isListening.value
+          ? const Duration(milliseconds: 1000)
+          : const Duration(milliseconds: 2000),
+      child: GestureDetector(
+        onTap: controller.isStreaming.value || controller.errorMessage.value.contains('Speech recognition not available')
+            ? null
+            : () => controller.isListening.value
+            ? controller.stopListening()
+            : controller.startListening(),
+        child: Container(
+          width: constraints.maxWidth * 0.12,
+          height: constraints.maxWidth * 0.12,
+          decoration: BoxDecoration(
+            gradient: controller.isListening.value
+                ? LinearGradient(
+              colors: [
+                const Color(0xFFEF4444).withOpacity(0.7),
+                const Color(0xFFDC2626).withOpacity(0.7),
+              ],
+            )
+                : LinearGradient(
+              colors: controller.errorMessage.value.contains('Speech recognition not available')
+                  ? [Colors.grey, Colors.grey.shade700]
+                  : [const Color(0xFF6366F1), const Color(0xFF8B5CF6)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: (controller.isListening.value
+                    ? const Color(0xFFEF4444)
+                    : controller.errorMessage.value.contains('Speech recognition not available')
+                    ? Colors.grey
+                    : const Color(0xFF6366F1))
+                    .withOpacity(0.4),
+                blurRadius: 15,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Icon(
+            controller.isListening.value ? Icons.mic : Icons.mic_none,
+            color: controller.errorMessage.value.contains('Speech recognition not available')
+                ? Colors.white.withOpacity(0.5)
+                : Colors.white,
+            size: constraints.maxWidth * 0.05,
+          ),
+        ),
+      ),
+    ));
   }
 
   Widget _buildDivineSendButton(BuildContext context, BoxConstraints constraints) {
@@ -868,16 +962,15 @@ class AIChatView extends GetView<AIChatController> {
               BoxShadow(
                 color: (controller.isStreaming.value
                     ? const Color(0xFF9333EA)
-                    : const Color(0xFFFFD700)).withOpacity(0.4),
+                    : const Color(0xFFFFD700))
+                    .withOpacity(0.4),
                 blurRadius: 15,
                 spreadRadius: 2,
               ),
             ],
           ),
           child: Icon(
-            controller.isStreaming.value
-                ? Icons.pause_rounded
-                : Icons.send_rounded,
+            controller.isStreaming.value ? Icons.pause_rounded : Icons.send_rounded,
             color: Colors.white,
             size: constraints.maxWidth * 0.05,
           ),

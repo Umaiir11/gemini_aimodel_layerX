@@ -1,0 +1,15 @@
+{
+  "originHash" : "aef3914c2677111712942845aff076ce3bd618af2e5cb3a42074953f9f0a27e6",
+  "pins" : [
+    {
+      "identity" : "cwlcatchexception",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mattgallagher/CwlCatchException.git",
+      "state" : {
+        "revision" : "07b2ba21d361c223e25e3c1e924288742923f08c",
+        "version" : "2.2.1"
+      }
+    }
+  ],
+  "version" : 3
+}
