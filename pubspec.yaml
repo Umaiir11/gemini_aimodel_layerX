@@ -47,7 +47,8 @@ dependencies:
   animated_text_kit: ^4.2.2
   speech_to_text: ^7.0.0
   flutter_tts: ^4.0.2
-
+  intl:
+  logging: ^1.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter

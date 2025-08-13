@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'app_routes.dart';
-import 'chat_controller.dart';
-import 'global_class.dart';
+import 'app/config/app_routes.dart';
+
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();

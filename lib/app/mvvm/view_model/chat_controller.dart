@@ -6,8 +6,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'ai_repo.dart';
-import 'chat_message.dart';
+import '../../repo/ai_repo.dart';
+import '../model/body_model/chat_message.dart';
 
 class AIChatController extends GetxController {
   final AIRepository _aiRepository = Get.find<AIRepository>();

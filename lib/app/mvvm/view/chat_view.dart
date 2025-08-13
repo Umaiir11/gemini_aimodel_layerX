@@ -5,8 +5,9 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:particles_fly/particles_fly.dart';
-import 'chat_controller.dart';
-import 'chat_message.dart';
+
+import '../view_model/chat_controller.dart';
+
 
 class AIChatView extends StatefulWidget {
   const AIChatView({super.key});
