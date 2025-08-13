@@ -20,6 +20,7 @@ class AIChatController extends GetxController {
   final stt.SpeechToText _speech = stt.SpeechToText();
   final FlutterTts _tts = FlutterTts();
   final RxBool isListening = false.obs;
+  final RxBool isRecording = false.obs; // Added for recording state
   final RxBool isSpeaking = false.obs;
   final RxInt speakingMessageIndex = (-1).obs;
   final RxBool isTtsAvailable = true.obs;
@@ -62,10 +63,14 @@ class AIChatController extends GetxController {
       bool available = await _speech.initialize(
         onStatus: (status) {
           isListening.value = status == 'listening';
+          if (status != 'listening') {
+            isRecording.value = false; // Ensure recording state is reset when speech stops
+          }
           developer.log('Speech status: $status', name: 'JesusAI');
         },
         onError: (error) {
           isListening.value = false;
+          isRecording.value = false;
           errorMessage.value = 'Speech recognition error: ${error.errorMsg}. Please try again or use text input.';
           developer.log('Speech error: ${error.errorMsg}, Permanent: ${error.permanent}', name: 'JesusAI');
         },
@@ -77,6 +82,7 @@ class AIChatController extends GetxController {
       }
     } catch (e, stackTrace) {
       isListening.value = false;
+      isRecording.value = false;
       errorMessage.value = 'Failed to initialize speech recognition: $e';
       developer.log('Error initializing speech: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
     }
@@ -197,7 +203,7 @@ class AIChatController extends GetxController {
   }
 
   Future<void> startListening() async {
-    if (isListening.value || isStreaming.value) return;
+    if (isListening.value || isStreaming.value || isRecording.value) return;
     if (isSpeaking.value) await stopSpeaking(); // Stop TTS before STT
     try {
       var status = await Permission.microphone.status;
@@ -247,6 +253,65 @@ class AIChatController extends GetxController {
     await _speech.stop();
     isListening.value = false;
     developer.log('Stopped listening', name: 'JesusAI');
+  }
+
+  Future<void> startRecording() async {
+    if (isRecording.value || isListening.value || isStreaming.value) return;
+    if (isSpeaking.value) await stopSpeaking(); // Stop TTS before recording
+    try {
+      var status = await Permission.microphone.status;
+      if (!status.isGranted) {
+        status = await Permission.microphone.request();
+        if (!status.isGranted) {
+          errorMessage.value = 'Microphone permission denied. Please enable it in device settings.';
+          developer.log('Microphone permission denied', name: 'JesusAI');
+          return;
+        }
+      }
+
+      bool available = await _speech.initialize();
+      if (available) {
+        isRecording.value = true;
+        isListening.value = true;
+        textController.clear();
+        _speech.listen(
+          onResult: (result) {
+            textController.text = result.recognizedWords;
+            if (result.finalResult) {
+              isListening.value = false;
+              isRecording.value = false;
+              if (result.recognizedWords.isNotEmpty) {
+                sendMessage(result.recognizedWords);
+              }
+            }
+          },
+          listenFor: const Duration(seconds: 60), // Allow longer recording time
+          pauseFor: const Duration(seconds: 5),
+          partialResults: true,
+          cancelOnError: true,
+          listenMode: stt.ListenMode.dictation, // Use dictation mode for continuous recording
+        );
+        developer.log('Started recording', name: 'JesusAI');
+      } else {
+        isRecording.value = false;
+        errorMessage.value = 'Speech recognition not available. Please check device settings or install Google Speech Services.';
+        developer.log('Speech recognition not available', name: 'JesusAI');
+      }
+    } catch (e, stackTrace) {
+      isRecording.value = false;
+      isListening.value = false;
+      errorMessage.value = 'Error starting speech recording: $e';
+      developer.log('Error starting recording: $e', name: 'JesusAI', error: e, stackTrace: stackTrace);
+    }
+  }
+
+  Future<void> stopRecording() async {
+    if (!isRecording.value && !isListening.value) return;
+    await _speech.stop();
+    isRecording.value = false;
+    isListening.value = false;
+    developer.log('Stopped recording', name: 'JesusAI');
+    // If text was recognized, it will be sent via onResult in startRecording
   }
 
   Future<void> speakResponse(String text, int messageIndex) async {

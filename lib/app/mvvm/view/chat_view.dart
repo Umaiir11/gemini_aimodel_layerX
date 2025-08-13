@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:particles_fly/particles_fly.dart';
 
+import '../../widget.dart';
 import '../view_model/chat_controller.dart';
 
 
@@ -668,47 +669,94 @@ class _AIChatViewState extends State<AIChatView> {
   }
 
   Widget _buildPrayerInputArea(BuildContext context, BoxConstraints constraints) {
-    return SlideInUp(
-      duration: const Duration(milliseconds: 800),
-      child: Container(
-        margin: EdgeInsets.all(constraints.maxWidth * 0.05),
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFF1E1B3C), Color(0xFF2D1B69)]),
-          borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3), width: 1),
-          boxShadow: [BoxShadow(color: const Color(0xFFFFD700).withOpacity(0.2), blurRadius: 20, spreadRadius: 2)],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _aiController.textController,
-                maxLines: null,
-                style: GoogleFonts.inter(color: Colors.white, fontSize: constraints.maxWidth * 0.038, fontWeight: FontWeight.w500, height: 1.5),
-                decoration: InputDecoration(
-                  hintText: 'Ask me about God\'s Word...',
-                  hintStyle: GoogleFonts.inter(
-                    color: Colors.white.withOpacity(0.6),
-                    fontSize: constraints.maxWidth * 0.038,
-                    fontWeight: FontWeight.w400,
+    return Obx(
+          () => _aiController.isRecording.value
+          ? VoiceRecordingWidget(
+        isRecording: _aiController.isRecording.value,
+        onCancel: () {
+          _aiController.stopRecording();
+          HapticFeedback.mediumImpact();
+        },
+        onStop: () {
+          _aiController.stopRecording();
+          HapticFeedback.mediumImpact();
+        },
+      )
+          : SlideInUp(
+        duration: const Duration(milliseconds: 800),
+        child: Container(
+          margin: EdgeInsets.all(constraints.maxWidth * 0.05),
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFF1E1B3C), Color(0xFF2D1B69)]),
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: const Color(0xFFFFD700).withOpacity(0.3), width: 1),
+            boxShadow: [BoxShadow(color: const Color(0xFFFFD700).withOpacity(0.2), blurRadius: 20, spreadRadius: 2)],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _aiController.textController,
+                  maxLines: null,
+                  style: GoogleFonts.inter(color: Colors.white, fontSize: constraints.maxWidth * 0.038, fontWeight: FontWeight.w500, height: 1.5),
+                  decoration: InputDecoration(
+                    hintText: 'Ask me about God\'s Word...',
+                    hintStyle: GoogleFonts.inter(
+                      color: Colors.white.withOpacity(0.6),
+                      fontSize: constraints.maxWidth * 0.038,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.symmetric(horizontal: constraints.maxWidth * 0.05, vertical: constraints.maxHeight * 0.02),
                   ),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: constraints.maxWidth * 0.05, vertical: constraints.maxHeight * 0.02),
+                  onSubmitted: _sendMessage,
                 ),
-                onSubmitted: _sendMessage,
               ),
-            ),
-            _buildMicButton(context, constraints),
-            SizedBox(width: constraints.maxWidth * 0.02),
-            _buildDivineSendButton(context, constraints),
-            SizedBox(width: constraints.maxWidth * 0.02),
-          ],
+              GestureDetector(
+                onLongPress: _aiController.isStreaming.value || _aiController.errorMessage.value.contains('Speech recognition not available')
+                    ? null
+                    : () {
+                  HapticFeedback.heavyImpact();
+                  _aiController.startRecording();
+                },
+                child: Container(
+                  width: constraints.maxWidth * 0.12,
+                  height: constraints.maxWidth * 0.12,
+                  decoration: BoxDecoration(
+                    gradient: _aiController.isStreaming.value || _aiController.errorMessage.value.contains('Speech recognition not available')
+                        ? LinearGradient(colors: [Colors.grey, Colors.grey.shade700])
+                        : const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)]),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_aiController.isStreaming.value || _aiController.errorMessage.value.contains('Speech recognition not available')
+                            ? Colors.grey
+                            : const Color(0xFF6366F1))
+                            .withOpacity(0.4),
+                        blurRadius: 15,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.mic_none,
+                    color: _aiController.isStreaming.value || _aiController.errorMessage.value.contains('Speech recognition not available')
+                        ? Colors.white.withOpacity(0.5)
+                        : Colors.white,
+                    size: constraints.maxWidth * 0.05,
+                  ),
+                ),
+              ),
+              SizedBox(width: constraints.maxWidth * 0.02),
+              _buildDivineSendButton(context, constraints),
+              SizedBox(width: constraints.maxWidth * 0.02),
+            ],
+          ),
         ),
       ),
     );
   }
-
   Widget _buildMicButton(BuildContext context, BoxConstraints constraints) {
     return Obx(
       () => Pulse(
