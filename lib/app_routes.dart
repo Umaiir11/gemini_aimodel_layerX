@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 
+import 'ai_repo.dart';
 import 'chat_controller.dart';
 import 'chat_view.dart';
 
@@ -16,6 +17,7 @@ abstract class AppPages {
       page: () => const AIChatView(),
       transition: Transition.fade,
       binding: BindingsBuilder(() {
+        Get.lazyPut<AIRepository>(() => AIRepository());
         Get.lazyPut<AIChatController>(() => AIChatController());
       }),
     ),
