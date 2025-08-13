@@ -7,7 +7,7 @@ import 'global_class.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  GlobalBindings().dependencies();
+  // GlobalBindings().dependencies();
   runApp(const JesusAIApp());
 }
 
@@ -22,11 +22,8 @@ class JesusAIApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      initialRoute: AppRoutes.aiChat,
-      getPages: AppRoutes.routes,
-      initialBinding: BindingsBuilder(() {
-        Get.lazyPut<AIChatController>(() => AIChatController());
-      }),
+        initialRoute: AppRoutes.aiChat,
+        getPages: AppPages.routes,
     );
   }
 }
