@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,15 +18,27 @@ class AIChatView extends StatefulWidget {
   _AIChatViewState createState() => _AIChatViewState();
 }
 
-class _AIChatViewState extends State<AIChatView> with SingleTickerProviderStateMixin {
+class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
   final AIChatController _aiController = Get.find();
   late AnimationController _pulseController;
+  late AnimationController _waveController;
+  late AnimationController _robotController;
 
   @override
   void initState() {
     super.initState();
     _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _waveController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat();
+
+    _robotController = AnimationController(
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     )..repeat(reverse: true);
   }
@@ -32,55 +46,52 @@ class _AIChatViewState extends State<AIChatView> with SingleTickerProviderStateM
   @override
   void dispose() {
     _pulseController.dispose();
+    _waveController.dispose();
+    _robotController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0B1E),
+      backgroundColor: const Color(0xFF000000),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: LayoutBuilder(
           builder: (context, constraints) {
             return Stack(
               children: [
-                // Background Gradient
+                // Dark gradient background like Siri
                 Container(
                   decoration: const BoxDecoration(
                     gradient: RadialGradient(
-                      center: Alignment.topCenter,
-                      radius: 1.5,
-                      colors: [Color(0xFF2D1B69), Color(0xFF0D0B1E), Color(0xFF000000)],
+                      center: Alignment.center,
+                      radius: 1.2,
+                      colors: [
+                        Color(0xFF1A1A1A),
+                        Color(0xFF0A0A0A),
+                        Color(0xFF000000),
+                      ],
                     ),
                   ),
                 ),
-                // Particle Effects
+                // Subtle particle effects
                 ParticlesFly(
                   height: constraints.maxHeight,
                   width: constraints.maxWidth,
-                  numberOfParticles: 120,
-                  speedOfParticles: 0.3,
+                  numberOfParticles: 80,
+                  speedOfParticles: 0.2,
                   connectDots: true,
-                  lineColor: const Color(0xFFFFD700).withOpacity(0.08),
-                  particleColor: const Color(0xFFFFD700).withOpacity(0.25),
-                  onTapAnimation: true,
-                ),
-                ParticlesFly(
-                  height: constraints.maxHeight,
-                  width: constraints.maxWidth,
-                  numberOfParticles: 60,
-                  speedOfParticles: 0.15,
-                  connectDots: false,
-                  lineColor: Colors.transparent,
-                  particleColor: const Color(0xFF9333EA).withOpacity(0.2),
+                  lineColor: Colors.blue.withOpacity(0.05),
+                  particleColor: Colors.blue.withOpacity(0.15),
                   onTapAnimation: true,
                 ),
                 SafeArea(
                   child: Column(
                     children: [
-                      _buildDivineHeader(context, constraints),
-                      Expanded(child: _buildBotInteractionArea(context, constraints)),
+                      _buildMinimalHeader(context, constraints),
+                      Expanded(child: _buildMainInteractionArea(context, constraints)),
+                      _buildBottomPrompt(context, constraints),
                       _buildErrorDisplay(context, constraints),
                     ],
                   ),
@@ -93,58 +104,28 @@ class _AIChatViewState extends State<AIChatView> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildDivineHeader(BuildContext context, BoxConstraints constraints) {
-    return SlideInDown(
-      duration: const Duration(milliseconds: 800),
+  Widget _buildMinimalHeader(BuildContext context, BoxConstraints constraints) {
+    return FadeInDown(
+      duration: const Duration(milliseconds: 600),
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: constraints.maxWidth * 0.05),
         padding: EdgeInsets.symmetric(vertical: constraints.maxHeight * 0.02),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElasticIn(
-              duration: const Duration(milliseconds: 1200),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(color: const Color(0xFFFFD700).withOpacity(0.3), blurRadius: 15, spreadRadius: 2),
-                  ],
-                ),
-                child: const Icon(Icons.auto_awesome, color: Colors.white, size: 20),
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.5),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
               ),
-            ),
-            SizedBox(width: constraints.maxWidth * 0.03),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                FadeInLeft(
-                  duration: const Duration(milliseconds: 1000),
-                  child: Text(
-                    'Jesus AI',
-                    style: GoogleFonts.inter(
-                      fontSize: constraints.maxWidth * 0.055,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
-                FadeInLeft(
-                  delay: const Duration(milliseconds: 200),
-                  duration: const Duration(milliseconds: 1000),
-                  child: Text(
-                    'Speak to Receive Biblical Wisdom',
-                    style: GoogleFonts.inter(
-                      fontSize: constraints.maxWidth * 0.028,
-                      color: const Color(0xFFFFD700).withOpacity(0.8),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -152,114 +133,457 @@ class _AIChatViewState extends State<AIChatView> with SingleTickerProviderStateM
     );
   }
 
-  Widget _buildBotInteractionArea(BuildContext context, BoxConstraints constraints) {
+  Widget _buildMainInteractionArea(BuildContext context, BoxConstraints constraints) {
     return Center(
-      child: Obx(
-            () => _aiController.isRecording.value
-            ? _buildRecordingIndicator(context, constraints)
-            : _aiController.isSpeaking.value
-            ? _buildSpeakingBot(context, constraints)
-            : _buildVoiceButton(context, constraints),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Main interaction element
+          Obx(() => _aiController.isRecording.value
+              ? _buildRecordingRobot(context, constraints)
+              : _aiController.isSpeaking.value
+              ? _buildSpeakingVisualizer(context, constraints)
+              : _buildSiriButton(context, constraints)),
+
+          SizedBox(height: constraints.maxHeight * 0.08),
+
+          // Status text
+          Obx(() => _buildStatusText(context, constraints)),
+        ],
       ),
     );
   }
 
-  Widget _buildVoiceButton(BuildContext context, BoxConstraints constraints) {
+  Widget _buildSiriButton(BuildContext context, BoxConstraints constraints) {
     return GestureDetector(
-      onLongPress: () {
+      onTap: () {
         if (!_aiController.isStreaming.value &&
             !_aiController.errorMessage.value.contains('Speech recognition not available')) {
-          HapticFeedback.heavyImpact();
+          HapticFeedback.lightImpact();
           _aiController.startRecording();
         }
       },
-      child: ScaleTransition(
-        scale: Tween(begin: 0.95, end: 1.05).animate(_pulseController),
+      child: ZoomIn(
+        duration: const Duration(milliseconds: 800),
         child: Container(
-          width: constraints.maxWidth * 0.3,
-          height: constraints.maxWidth * 0.3,
+          width: constraints.maxWidth * 0.35,
+          height: constraints.maxWidth * 0.35,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)]),
             shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.blue.withOpacity(0.8),
+                Colors.purple.withOpacity(0.8),
+                Colors.pink.withOpacity(0.8),
+              ],
+            ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6366F1).withOpacity(0.4),
-                blurRadius: 20,
+                color: Colors.blue.withOpacity(0.3),
+                blurRadius: 30,
                 spreadRadius: 5,
               ),
             ],
           ),
-          child: Icon(
-            Icons.mic_none,
-            color: Colors.white,
-            size: constraints.maxWidth * 0.1,
+          child: AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: 1.0 + (_pulseController.value * 0.05),
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.blue.withOpacity(0.9),
+                        Colors.purple.withOpacity(0.9),
+                        Colors.pink.withOpacity(0.9),
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.mic_none_rounded,
+                      size: constraints.maxWidth * 0.12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _buildRecordingIndicator(BuildContext context, BoxConstraints constraints) {
-    return Pulse(
-      duration: const Duration(milliseconds: 800),
-      child: Container(
-        width: constraints.maxWidth * 0.3,
-        height: constraints.maxWidth * 0.3,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFFEF4444), Color(0xFFDC2626)]),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFEF4444).withOpacity(0.4),
-              blurRadius: 20,
-              spreadRadius: 5,
-            ),
-          ],
-        ),
+  Widget _buildRecordingRobot(BuildContext context, BoxConstraints constraints) {
+    return SlideInUp(
+      duration: const Duration(milliseconds: 400),
+      child: GestureDetector(
+        onTap: () {
+          // Allow stopping recording by tapping
+          HapticFeedback.lightImpact();
+          _aiController.stopRecording();
+        },
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.mic,
-              color: Colors.white,
-              size: constraints.maxWidth * 0.1,
+            // Animated robot face
+            AnimatedBuilder(
+              animation: _robotController,
+              builder: (context, child) {
+                return Transform.scale(
+                  scale: 1.0 + (_robotController.value * 0.1),
+                  child: Container(
+                    width: constraints.maxWidth * 0.4,
+                    height: constraints.maxWidth * 0.4,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.cyan.withOpacity(0.8),
+                          Colors.blue.withOpacity(0.9),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.cyan.withOpacity(0.4),
+                          blurRadius: 40,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        // Robot face
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              // Eyes
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.white.withOpacity(0.5),
+                                          blurRadius: 5,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.white.withOpacity(0.5),
+                                          blurRadius: 5,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: constraints.maxHeight * 0.02),
+                              // Mouth - animated speaking
+                              AnimatedBuilder(
+                                animation: _waveController,
+                                builder: (context, child) {
+                                  return Container(
+                                    width: 30,
+                                    height: 8,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(4),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.white.withOpacity(0.5),
+                                          blurRadius: 5,
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Antenna
+                        Positioned(
+                          top: 10,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Container(
+                              width: 3,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                              child: Align(
+                                alignment: Alignment.topCenter,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: Colors.yellow,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.yellow.withOpacity(0.8),
+                                        blurRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-            SizedBox(height: constraints.maxHeight * 0.01),
-            Text(
-              'Listening...',
-              style: GoogleFonts.inter(
-                color: Colors.white,
-                fontSize: constraints.maxWidth * 0.04,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            SizedBox(height: constraints.maxHeight * 0.03),
+            // Sound wave visualization
+            _buildSoundWaves(context, constraints),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSpeakingBot(BuildContext context, BoxConstraints constraints) {
-    return ScaleTransition(
-      scale: Tween(begin: 0.9, end: 1.1).animate(_pulseController),
+  Widget _buildSoundWaves(BuildContext context, BoxConstraints constraints) {
+    return AnimatedBuilder(
+      animation: _waveController,
+      builder: (context, child) {
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(5, (index) {
+            double height = 4 + (20 * (0.5 + 0.5 *
+                math.sin((_waveController.value * 2 * math.pi) + (index * 0.5))));
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              width: 3,
+              height: height,
+              decoration: BoxDecoration(
+                color: Colors.cyan,
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.cyan.withOpacity(0.5),
+                    blurRadius: 5,
+                  ),
+                ],
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+
+  Widget _buildSpeakingVisualizer(BuildContext context, BoxConstraints constraints) {
+    return SlideInUp(
+      duration: const Duration(milliseconds: 400),
+      child: GestureDetector(
+        onTap: () {
+          // Allow stopping speech and starting new recording
+          HapticFeedback.lightImpact();
+          _aiController.stopSpeaking();
+          _aiController.startRecording();
+        },
+        child: Container(
+          width: constraints.maxWidth * 0.35,
+          height: constraints.maxWidth * 0.35,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              colors: [
+                Colors.green.withOpacity(0.8),
+                Colors.teal.withOpacity(0.9),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.green.withOpacity(0.4),
+                blurRadius: 30,
+                spreadRadius: 10,
+              ),
+            ],
+          ),
+          child: AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: 1.0 + (_pulseController.value * 0.15),
+                child: Icon(
+                  Icons.volume_up_rounded,
+                  size: constraints.maxWidth * 0.12,
+                  color: Colors.white,
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusText(BuildContext context, BoxConstraints constraints) {
+    String statusText = '';
+    Color textColor = Colors.white70;
+
+    if (_aiController.isRecording.value) {
+      statusText = 'Listening...';
+      textColor = Colors.cyan;
+    } else if (_aiController.isSpeaking.value) {
+      statusText = 'Speaking...';
+      textColor = Colors.green;
+    } else {
+      statusText = 'Tap to speak';
+      textColor = Colors.white70;
+    }
+
+    return FadeInUp(
+      duration: const Duration(milliseconds: 600),
+      child: Text(
+        statusText,
+        style: GoogleFonts.inter(
+          fontSize: constraints.maxWidth * 0.045,
+          color: textColor,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomPrompt(BuildContext context, BoxConstraints constraints) {
+    return Obx(() => !_aiController.isRecording.value && !_aiController.isSpeaking.value
+        ? FadeInUp(
+      duration: const Duration(milliseconds: 800),
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: constraints.maxWidth * 0.1,
+          vertical: constraints.maxHeight * 0.03,
+        ),
+        child: Text(
+          'Ask me anything about faith, wisdom, or guidance',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.inter(
+            fontSize: constraints.maxWidth * 0.038,
+            color: Colors.white54,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
+      ),
+    )
+        : const SizedBox.shrink());
+  }
+
+  Widget _buildLoadingIndicator(BuildContext context, BoxConstraints constraints) {
+    return SlideInUp(
+      duration: const Duration(milliseconds: 400),
       child: Container(
-        width: constraints.maxWidth * 0.4,
-        height: constraints.maxWidth * 0.4,
+        width: constraints.maxWidth * 0.35,
+        height: constraints.maxWidth * 0.35,
         decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA500)]),
           shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [
+              Colors.orange.withOpacity(0.8),
+              Colors.purple.withOpacity(0.9),
+            ],
+          ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFFFD700).withOpacity(0.4),
+              color: Colors.orange.withOpacity(0.4),
               blurRadius: 30,
               spreadRadius: 10,
             ),
           ],
         ),
-        child: Icon(
-          Icons.menu_book_rounded,
-          color: Colors.white,
-          size: constraints.maxWidth * 0.15,
+        child: AnimatedBuilder(
+          animation: _waveController,
+          builder: (context, child) {
+            return Transform.rotate(
+              angle: _waveController.value * 2 * math.pi,
+              child: Icon(
+                Icons.psychology_rounded,
+                size: constraints.maxWidth * 0.12,
+                color: Colors.white,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCancelButton(BuildContext context, BoxConstraints constraints) {
+    return FadeInUp(
+      delay: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 400),
+      child: GestureDetector(
+        onTap: () {
+          HapticFeedback.mediumImpact();
+          if (_aiController.isSpeaking.value) {
+            _aiController.stopSpeaking();
+          }
+          if (_aiController.isStreaming.value || _aiController.isLoading.value) {
+            _aiController.cancelRequest();
+          }
+        },
+        child: Container(
+          margin: EdgeInsets.only(top: constraints.maxHeight * 0.03),
+          padding: EdgeInsets.symmetric(
+            horizontal: constraints.maxWidth * 0.08,
+            vertical: constraints.maxHeight * 0.015,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.red.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(color: Colors.red.withOpacity(0.4)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.cancel_outlined,
+                color: Colors.red,
+                size: constraints.maxWidth * 0.05,
+              ),
+              SizedBox(width: constraints.maxWidth * 0.02),
+              Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  color: Colors.red,
+                  fontSize: constraints.maxWidth * 0.04,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -274,34 +598,29 @@ class _AIChatViewState extends State<AIChatView> with SingleTickerProviderStateM
           margin: EdgeInsets.all(constraints.maxWidth * 0.05),
           padding: EdgeInsets.all(constraints.maxWidth * 0.04),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFFEF4444), Color(0xFFDC2626)]),
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(color: const Color(0xFFEF4444).withOpacity(0.3), blurRadius: 15),
-            ],
+            color: Colors.red.withOpacity(0.1),
+            border: Border.all(color: Colors.red.withOpacity(0.3)),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
             children: [
-              const Icon(Icons.warning_rounded, color: Colors.white),
+              Icon(Icons.error_outline_rounded,
+                  color: Colors.red, size: constraints.maxWidth * 0.06),
               SizedBox(width: constraints.maxWidth * 0.03),
               Expanded(
                 child: Text(
-                  _aiController.errorMessage.value +
-                      (_aiController.errorMessage.value.contains('TTS')
-                          ? '\nTry installing Google Text-to-Speech or check TTS settings.'
-                          : _aiController.errorMessage.value.contains('Speech recognition')
-                          ? '\nTry installing Google Speech Services or check device settings.'
-                          : ''),
+                  _aiController.errorMessage.value,
                   style: GoogleFonts.inter(
-                    color: Colors.white,
+                    color: Colors.red,
                     fontSize: constraints.maxWidth * 0.035,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
               GestureDetector(
                 onTap: () => _aiController.errorMessage.value = '',
-                child: const Icon(Icons.close_rounded, color: Colors.white),
+                child: Icon(Icons.close_rounded,
+                    color: Colors.red, size: constraints.maxWidth * 0.05),
               ),
             ],
           ),
@@ -311,3 +630,5 @@ class _AIChatViewState extends State<AIChatView> with SingleTickerProviderStateM
     );
   }
 }
+
+// Add this import at the top of the file
