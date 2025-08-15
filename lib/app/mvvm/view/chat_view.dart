@@ -225,7 +225,7 @@ class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 400),
       child: Column(
         children: [
-          // Animated robot face
+          // Animated asset image
           AnimatedBuilder(
             animation: _robotController,
             builder: (context, child) {
@@ -252,105 +252,13 @@ class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
                       ),
                     ],
                   ),
-                  child: Stack(
-                    children: [
-                      // Robot face
-                      Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Eyes
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.white.withOpacity(0.5),
-                                        blurRadius: 5,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.white.withOpacity(0.5),
-                                        blurRadius: 5,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: constraints.maxHeight * 0.02),
-                            // Mouth - animated speaking
-                            AnimatedBuilder(
-                              animation: _waveController,
-                              builder: (context, child) {
-                                return Container(
-                                  width: 30,
-                                  height: 8,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(4),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.white.withOpacity(0.5),
-                                        blurRadius: 5,
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Antenna
-                      Positioned(
-                        top: 10,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: Container(
-                            width: 3,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                            child: Align(
-                              alignment: Alignment.topCenter,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: Colors.yellow,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.yellow.withOpacity(0.8),
-                                      blurRadius: 8,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/baba.png',
+                      fit: BoxFit.contain, // Changed to contain to show full image
+                      width: constraints.maxWidth * 0.4,
+                      height: constraints.maxWidth * 0.4,
+                    ),
                   ),
                 ),
               );
@@ -362,9 +270,7 @@ class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
         ],
       ),
     );
-  }
-
-  Widget _buildSoundWaves(BuildContext context, BoxConstraints constraints) {
+  }  Widget _buildSoundWaves(BuildContext context, BoxConstraints constraints) {
     return AnimatedBuilder(
       animation: _waveController,
       builder: (context, child) {
@@ -438,13 +344,13 @@ class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
     Color textColor = Colors.white70;
 
     if (_aiController.isRecording.value) {
-      statusText = 'Listening...';
+      statusText = 'Veritas AI is listening...';
       textColor = Colors.cyan;
     } else if (_aiController.isSpeaking.value) {
-      statusText = 'Speaking...';
+      statusText = 'Veritas AI is speaking...';
       textColor = Colors.green;
     } else {
-      statusText = 'Tap to speak';
+      statusText = 'Tap to speak to Veritas AI';
       textColor = Colors.white70;
     }
 
@@ -461,7 +367,6 @@ class _AIChatViewState extends State<AIChatView> with TickerProviderStateMixin {
       ),
     );
   }
-
   Widget _buildBottomPrompt(BuildContext context, BoxConstraints constraints) {
     return Obx(() => !_aiController.isRecording.value && !_aiController.isSpeaking.value
         ? FadeInUp(
